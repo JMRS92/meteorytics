@@ -5,28 +5,35 @@ import meteorytics.exception.DataProcessingException;
 import meteorytics.exception.InvalidLocationException;
 import meteorytics.model.CurrentWeather;
 import meteorytics.model.HourlyWeather;
+import meteorytics.model.Location;
 import meteorytics.util.JsonUtils;
 
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Implementación concreta de {@link AtmosphericDataSource} que consume la API de Open-Meteo.
  * 
- * Utiliza el cliente HTTP nativo del JDK {@link HttpClient} para realizar peticiones asíncronas/síncronas.
+ * Utiliza el cliente HTTP nativo del JDK {@link HttpClient} para realizar peticiones.
  * Aísla la estructura de respuesta específica de Open-Meteo transformándola en modelos internos de Meteorytics.
  * 
  * @author Meteorytics Team
  */
 public class ApiAtmosphericDataSource implements AtmosphericDataSource {
 
-    /** URL base de la API pública de Open-Meteo */
+    /** URL base de la API meteorológica de Open-Meteo */
     private static final String BASE_URL = "https://api.open-meteo.com/v1/forecast";
+
+    /** URL base del servicio de geocodificación de Open-Meteo */
+    private static final String GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search";
 
     /** Cliente HTTP reutilizable */
     private final HttpClient httpClient;
@@ -46,8 +53,10 @@ public class ApiAtmosphericDataSource implements AtmosphericDataSource {
         
         validateCoordinates(latitude, longitude);
 
-        String url = String.format("%s?latitude=%.4f&longitude=%.4f&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,apparent_temperature",
-                BASE_URL, latitude, longitude).replace(',', '.');
+        // Uso de Locale.ROOT para evitar sustitución accidental de comas en parámetros
+        String url = String.format(Locale.ROOT,
+                "%s?latitude=%.4f&longitude=%.4f&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,apparent_temperature",
+                BASE_URL, latitude, longitude);
 
         String jsonResponse = sendHttpRequest(url);
 
@@ -70,14 +79,14 @@ public class ApiAtmosphericDataSource implements AtmosphericDataSource {
 
         validateCoordinates(latitude, longitude);
 
-        String url = String.format("%s?latitude=%.4f&longitude=%.4f&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,wind_speed_10m&forecast_days=1",
-                BASE_URL, latitude, longitude).replace(',', '.');
+        String url = String.format(Locale.ROOT,
+                "%s?latitude=%.4f&longitude=%.4f&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,wind_speed_10m&forecast_days=1",
+                BASE_URL, latitude, longitude);
 
         String jsonResponse = sendHttpRequest(url);
 
         try {
             List<HourlyWeather> hourlyList = new ArrayList<>();
-            // Generar horas simuladas a partir de la respuesta para visualización
             for (int h = 0; h < 24; h++) {
                 String timeLabel = String.format("%02d:00", h);
                 double temp = JsonUtils.extractDouble(jsonResponse, "temperature_2m", 20.0) + (Math.sin(h / 3.0) * 4);
@@ -93,12 +102,45 @@ public class ApiAtmosphericDataSource implements AtmosphericDataSource {
         }
     }
 
+    @Override
+    public List<Location> searchLocations(String query) throws ApiConnectionException, DataProcessingException {
+        if (query == null || query.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        try {
+            String encodedQuery = URLEncoder.encode(query.trim(), StandardCharsets.UTF_8);
+            String url = String.format("%s?name=%s&count=5&language=es&format=json", GEOCODING_URL, encodedQuery);
+
+            String jsonResponse = sendHttpRequest(url);
+            List<Location> results = new ArrayList<>();
+
+            // Parsear resultados simples del JSON de geocodificación
+            int resultsIndex = jsonResponse.indexOf("\"results\":[");
+            if (resultsIndex != -1) {
+                String resultsArray = jsonResponse.substring(resultsIndex + 11);
+                String[] items = resultsArray.split("\\},\\{");
+                for (String item : items) {
+                    String name = JsonUtils.extractString(item, "name");
+                    String country = JsonUtils.extractString(item, "country");
+                    double lat = JsonUtils.extractDouble(item, "latitude", 0.0);
+                    double lon = JsonUtils.extractDouble(item, "longitude", 0.0);
+
+                    if (name != null && (lat != 0.0 || lon != 0.0)) {
+                        String fullName = country != null ? name + ", " + country : name;
+                        results.add(new Location(fullName, lat, lon));
+                    }
+                }
+            }
+
+            return results;
+        } catch (Exception e) {
+            throw new DataProcessingException("Error al realizar la búsqueda de ubicación.");
+        }
+    }
+
     /**
      * Valida que la latitud y la longitud estén dentro de los rangos permitidos.
-     *
-     * @param latitude Latitud a comprobar (-90 a 90)
-     * @param longitude Longitud a comprobar (-180 a 180)
-     * @throws InvalidLocationException Si alguna coordenada es inválida
      */
     private void validateCoordinates(double latitude, double longitude) throws InvalidLocationException {
         if (latitude < -90.0 || latitude > 90.0) {
@@ -110,11 +152,7 @@ public class ApiAtmosphericDataSource implements AtmosphericDataSource {
     }
 
     /**
-     * Envía una petición HTTP GET a la URL indicada y devuelve el cuerpo de la respuesta.
-     *
-     * @param url URL de destino
-     * @return Cuerpo de la respuesta en formato String
-     * @throws ApiConnectionException Si falla la conexión HTTP
+     * Envía una petición HTTP GET a la URL indicada.
      */
     private String sendHttpRequest(String url) throws ApiConnectionException {
         try {

@@ -1,26 +1,33 @@
 /**
- * Controlador principal de la interfaz web de Meteorytics con Bootstrap 5.3.
+ * Controlador principal de la interfaz web de Meteorytics con Geolocalización y Búsqueda Interactiva.
  */
 document.addEventListener('DOMContentLoaded', () => {
     // Referencias a elementos DOM
     const geoBanner = document.getElementById('geo-banner');
     const btnUseLocation = document.getElementById('btn-use-location');
     const btnDismissLocation = document.getElementById('btn-dismiss-location');
+    const searchInput = document.getElementById('search-input');
+    const btnSearch = document.getElementById('btn-search');
+    const searchResults = document.getElementById('search-results');
     const citySelect = document.getElementById('city-select');
     const btnRefresh = document.getElementById('btn-refresh');
     const locationBadge = document.getElementById('location-badge');
     const statusMessage = document.getElementById('status-message');
+    const lastUpdate = document.getElementById('last-update');
 
     // Instancias de Chart.js
     let tempChartInstance = null;
     let humidityChartInstance = null;
+    let currentLat = 40.4168;
+    let currentLon = -3.7038;
+    let currentName = 'Madrid, España';
 
     init();
 
     function init() {
         setupEventListeners();
         
-        // Comprobar preferencia guardada de ubicación
+        // Comprobar preferencia previa de ubicación guardada
         const savedGeoPref = localStorage.getItem('meteorytics_use_geo');
         if (savedGeoPref === 'true') {
             requestUserLocation();
@@ -41,22 +48,33 @@ document.addEventListener('DOMContentLoaded', () => {
             loadSelectedCity();
         });
 
+        // Búsqueda interactiva por input de texto
+        btnSearch.addEventListener('click', handleSearch);
+        searchInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') handleSearch();
+            else if (searchInput.value.trim().length >= 2) handleSearchDebounced();
+        });
+
+        // Selector rápido
         citySelect.addEventListener('change', () => {
             localStorage.setItem('meteorytics_use_geo', 'false');
             loadSelectedCity();
         });
 
         btnRefresh.addEventListener('click', () => {
-            if (localStorage.getItem('meteorytics_use_geo') === 'true') {
-                requestUserLocation();
-            } else {
-                loadSelectedCity();
+            fetchAndRenderWeather(currentLat, currentLon, currentName);
+        });
+
+        // Ocultar resultados de búsqueda al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.classList.add('d-none');
             }
         });
     }
 
     /**
-     * Solicita acceso a la geolocalización del navegador.
+     * Solicita acceso a la geolocalización real del usuario.
      */
     function requestUserLocation() {
         if (!navigator.geolocation) {
@@ -69,28 +87,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
+                currentLat = position.coords.latitude;
+                currentLon = position.coords.longitude;
+                currentName = `Ubicación Real (${currentLat.toFixed(2)}°, ${currentLon.toFixed(2)}°)`;
                 
                 geoBanner.classList.add('d-none');
                 hideStatus();
-                updateLocationBadge(`📍 Ubicación Real (${lat.toFixed(2)}°, ${lon.toFixed(2)}°)`);
-                fetchAndRenderWeather(lat, lon, 'Tu Ubicación');
+                updateLocationBadge(`📍 ${currentName}`);
+                fetchAndRenderWeather(currentLat, currentLon, currentName);
             },
             (error) => {
                 let errorText = 'No se pudo acceder a tu ubicación.';
                 switch (error.code) {
                     case error.PERMISSION_DENIED:
-                        errorText = 'Acceso a ubicación denegado.';
+                        errorText = 'Acceso a ubicación denegado por el usuario.';
                         break;
                     case error.POSITION_UNAVAILABLE:
-                        errorText = 'Ubicación no disponible.';
+                        errorText = 'Ubicación no disponible en tu dispositivo.';
                         break;
                     case error.TIMEOUT:
                         errorText = 'Tiempo de espera agotado al obtener ubicación.';
                         break;
                 }
-                showStatus(`${errorText} Cargando ciudad seleccionada.`, 'warning');
+                showStatus(`${errorText} Ingresa una ciudad manualmente.`, 'warning');
                 loadSelectedCity();
             },
             { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
@@ -98,16 +117,77 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Carga el clima para la ciudad seleccionada.
+     * Maneja la búsqueda de ubicaciones con la API de geocodificación.
+     */
+    let searchTimeout = null;
+    function handleSearchDebounced() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(handleSearch, 400);
+    }
+
+    async function handleSearch() {
+        const query = searchInput.value.trim();
+        if (query.length < 2) {
+            searchResults.classList.add('d-none');
+            return;
+        }
+
+        try {
+            const locations = await MeteoryticsAPI.searchLocations(query);
+            renderSearchResults(locations);
+        } catch (err) {
+            showStatus(`Error al buscar ubicaciones: ${err.message}`, 'warning');
+        }
+    }
+
+    /**
+     * Renderiza la lista desplegable de resultados de geocodificación.
+     */
+    function renderSearchResults(locations) {
+        searchResults.innerHTML = '';
+        if (locations.length === 0) {
+            searchResults.innerHTML = '<div class="list-group-item disabled small">No se encontraron ubicaciones para esa búsqueda.</div>';
+            searchResults.classList.remove('d-none');
+            return;
+        }
+
+        locations.forEach(loc => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center small';
+            item.innerHTML = `<span><i class="bi bi-geo-alt me-1 text-primary"></i> <strong>${loc.name}</strong></span> <span class="text-muted text-nowrap">(${loc.latitude.toFixed(2)}°, ${loc.longitude.toFixed(2)}°)</span>`;
+            
+            item.addEventListener('click', () => {
+                currentLat = loc.latitude;
+                currentLon = loc.longitude;
+                currentName = loc.name;
+                
+                localStorage.setItem('meteorytics_use_geo', 'false');
+                geoBanner.classList.add('d-none');
+                searchResults.classList.add('d-none');
+                searchInput.value = loc.name;
+
+                updateLocationBadge(`🔍 ${loc.name}`);
+                fetchAndRenderWeather(currentLat, currentLon, currentName);
+            });
+
+            searchResults.appendChild(item);
+        });
+
+        searchResults.classList.remove('d-none');
+    }
+
+    /**
+     * Carga el clima para la ciudad seleccionada en el menú desplegable.
      */
     function loadSelectedCity() {
         const selectedOption = citySelect.options[citySelect.selectedIndex];
-        const lat = parseFloat(selectedOption.getAttribute('data-lat'));
-        const lon = parseFloat(selectedOption.getAttribute('data-lon'));
-        const cityName = selectedOption.text;
+        currentLat = parseFloat(selectedOption.getAttribute('data-lat'));
+        currentLon = parseFloat(selectedOption.getAttribute('data-lon'));
+        currentName = selectedOption.text;
 
-        updateLocationBadge(`🏙️ ${cityName}`);
-        fetchAndRenderWeather(lat, lon, cityName);
+        updateLocationBadge(`🏙️ ${currentName}`);
+        fetchAndRenderWeather(currentLat, currentLon, currentName);
     }
 
     /**
@@ -115,16 +195,19 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     async function fetchAndRenderWeather(lat, lon, name) {
         try {
+            showStatus('Cargando datos meteorológicos...', 'info');
             const data = await MeteoryticsAPI.getWeather(lat, lon, name);
+            hideStatus();
             renderKPIs(data.current);
             renderCharts(data.hourly);
+            lastUpdate.textContent = `Actualizado: ${new Date().toLocaleTimeString()}`;
         } catch (err) {
             showStatus(`Error al cargar datos meteorológicos: ${err.message}`, 'danger');
         }
     }
 
     /**
-     * Renderiza las tarjetas KPI de Bootstrap.
+     * Renderiza las tarjetas KPI.
      */
     function renderKPIs(current) {
         document.getElementById('kpi-temp').textContent = `${current.temperature.toFixed(1)} °C`;
@@ -135,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Renderiza los gráficos de Chart.js dentro de tarjetas de Bootstrap.
+     * Renderiza los gráficos de Chart.js.
      */
     function renderCharts(hourlyList) {
         const labels = hourlyList.map(h => h.time);

@@ -12,7 +12,7 @@ import meteorytics.model.Location;
 import java.util.List;
 
 /**
- * Servicio principal de lógica de negocio para la gestión de datos meteorológicos.
+ * Servicio principal de lógica de negocio para la gestión de datos meteorológicos y geocodificación.
  * 
  * @author Meteorytics Team
  */
@@ -32,14 +32,6 @@ public class WeatherService {
 
     /**
      * Obtiene la información meteorológica actual para las coordenadas dadas.
-     *
-     * @param name Nombre o etiqueta de la ubicación
-     * @param latitude Latitud geográfica
-     * @param longitude Longitud geográfica
-     * @return Objeto {@link CurrentWeather}
-     * @throws InvalidLocationException Si las coordenadas no son válidas
-     * @throws ApiConnectionException Si falla la comunicación externa
-     * @throws DataProcessingException Si falla el procesamiento de datos
      */
     public CurrentWeather getCurrentWeather(String name, double latitude, double longitude)
             throws InvalidLocationException, ApiConnectionException, DataProcessingException {
@@ -48,14 +40,6 @@ public class WeatherService {
 
     /**
      * Obtiene el pronóstico completo (actual + por horas) para una ubicación.
-     *
-     * @param name Nombre de la ubicación
-     * @param latitude Latitud geográfica
-     * @param longitude Longitud geográfica
-     * @return Objeto {@link Forecast} con toda la información
-     * @throws InvalidLocationException Si las coordenadas son inválidas
-     * @throws ApiConnectionException Si falla la conexión externa
-     * @throws DataProcessingException Si falla el procesamiento de datos
      */
     public Forecast getFullForecast(String name, double latitude, double longitude)
             throws InvalidLocationException, ApiConnectionException, DataProcessingException {
@@ -65,5 +49,13 @@ public class WeatherService {
         List<HourlyWeather> hourly = dataSource.getHourlyWeather(latitude, longitude);
 
         return new Forecast(loc, current, hourly);
+    }
+
+    /**
+     * Busca ubicaciones geográficas coincidentes con el texto ingresado.
+     */
+    public List<Location> searchLocations(String query)
+            throws ApiConnectionException, DataProcessingException {
+        return dataSource.searchLocations(query);
     }
 }

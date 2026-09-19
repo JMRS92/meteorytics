@@ -3,6 +3,7 @@ package meteorytics;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import meteorytics.controller.GeocodingController;
 import meteorytics.controller.WeatherController;
 import meteorytics.data.ApiAtmosphericDataSource;
 import meteorytics.data.AtmosphericDataSource;
@@ -42,6 +43,7 @@ public class Main {
         AtmosphericDataSource dataSource = new ApiAtmosphericDataSource();
         WeatherService weatherService = new WeatherService(dataSource);
         WeatherController weatherController = new WeatherController(weatherService);
+        GeocodingController geocodingController = new GeocodingController(weatherService);
 
         // Endpoint de salud
         server.createContext("/api/health", exchange -> {
@@ -55,6 +57,9 @@ public class Main {
 
         // Endpoint meteorológico
         server.createContext("/api/weather", weatherController);
+
+        // Endpoint de búsqueda de ubicaciones (geocodificación)
+        server.createContext("/api/geocoding", geocodingController);
 
         // Servidor de archivos estáticos del frontend
         server.createContext("/", new StaticFileHandler("frontend"));

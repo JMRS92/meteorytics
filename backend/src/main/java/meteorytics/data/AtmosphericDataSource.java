@@ -5,11 +5,12 @@ import meteorytics.exception.DataProcessingException;
 import meteorytics.exception.InvalidLocationException;
 import meteorytics.model.CurrentWeather;
 import meteorytics.model.HourlyWeather;
+import meteorytics.model.Location;
 
 import java.util.List;
 
 /**
- * Interfaz que abstrae el origen de datos meteorológicos externos.
+ * Interfaz que abstrae el origen de datos meteorológicos y de geocodificación externos.
  * 
  * Aísla a la aplicación de proveedores específicos (como Open-Meteo o WeatherAPI),
  * garantizando la regla del 80% de abstracción en el núcleo de Meteorytics.
@@ -43,4 +44,15 @@ public interface AtmosphericDataSource {
      */
     List<HourlyWeather> getHourlyWeather(double latitude, double longitude)
             throws InvalidLocationException, ApiConnectionException, DataProcessingException;
+
+    /**
+     * Busca ubicaciones (ciudades, países, distritos) por texto mediante el servicio de geocodificación.
+     *
+     * @param query Texto de búsqueda (ej. "Madrid", "Barcelona", "Pamplona")
+     * @return Lista de coincidencias {@link Location} encontradas con sus coordenadas
+     * @throws ApiConnectionException Si ocurre un fallo de comunicación con la API
+     * @throws DataProcessingException Si falla el procesamiento de la respuesta
+     */
+    List<Location> searchLocations(String query)
+            throws ApiConnectionException, DataProcessingException;
 }

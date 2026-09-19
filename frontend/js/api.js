@@ -20,5 +20,23 @@ const MeteoryticsAPI = {
         }
         
         return await response.json();
+    },
+
+    /**
+     * Realiza una búsqueda de ubicaciones (geocodificación) por texto.
+     * 
+     * @param {string} query Nombre de la ciudad, país o dirección
+     * @returns {Promise<Array>} Lista de ubicaciones encontradas
+     */
+    async searchLocations(query) {
+        if (!query || query.trim().length === 0) return [];
+        const url = `/api/geocoding?q=${encodeURIComponent(query.trim())}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        return await response.json();
     }
 };
