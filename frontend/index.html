@@ -5,22 +5,95 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meteorytics - Atmospheric Data Intelligence</title>
     <link rel="stylesheet" href="css/style.css">
+    <!-- Chart.js para visualizaciones -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <header>
-        <h1>Meteorytics</h1>
-        <p>Atmospheric Data Intelligence</p>
+    <header class="app-header">
+        <div class="header-container">
+            <h1 class="logo">Meteorytics</h1>
+            <p class="tagline">Atmospheric Data Intelligence</p>
+        </div>
     </header>
 
-    <main>
-        <section id="dashboard">
-            <h2>Dashboard Meteorológico</h2>
-            <div id="status-card">
-                <p>Cargando datos...</p>
+    <main class="main-container">
+        <!-- Banner de solicitud de ubicación por geolocalización -->
+        <section id="geo-banner" class="geo-banner">
+            <div class="geo-content">
+                <span class="geo-icon">📍</span>
+                <p>¿Deseas permitir acceso a tu ubicación en tiempo real para obtener datos meteorológicos precisos?</p>
+                <div class="geo-buttons">
+                    <button id="btn-use-location" class="btn btn-primary">Usar mi ubicación real</button>
+                    <button id="btn-dismiss-location" class="btn btn-secondary">Usar ubicación por defecto</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Selector manual de ciudad -->
+        <section class="controls-section">
+            <div class="location-selector">
+                <label for="city-select">Seleccionar ubicación:</label>
+                <select id="city-select" class="form-select">
+                    <option value="madrid" data-lat="40.4168" data-lon="-3.7038">Madrid, España</option>
+                    <option value="barcelona" data-lat="41.3879" data-lon="2.1699">Barcelona, España</option>
+                    <option value="valencia" data-lat="39.4699" data-lon="-0.3763">Valencia, España</option>
+                    <option value="sevilla" data-lat="37.3891" data-lon="-5.9845">Sevilla, España</option>
+                    <option value="bilbao" data-lat="43.2630" data-lon="-2.9350">Bilbao, España</option>
+                </select>
+                <button id="btn-refresh" class="btn btn-icon">🔄 Actualizar</button>
+            </div>
+            <div id="location-badge" class="location-badge">Ubicación actual: Madrid</div>
+        </section>
+
+        <!-- Mensaje de estado/error -->
+        <div id="status-message" class="status-message hidden"></div>
+
+        <!-- Tarjetas de KPIs actuales -->
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">Temperatura</div>
+                <div id="kpi-temp" class="kpi-value">-- °C</div>
+                <div id="kpi-apparent" class="kpi-sub">Sensación: -- °C</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-title">Humedad</div>
+                <div id="kpi-humidity" class="kpi-value">-- %</div>
+                <div class="kpi-sub">Humedad relativa</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-title">Presión</div>
+                <div id="kpi-pressure" class="kpi-value">-- hPa</div>
+                <div class="kpi-sub">Presión superficial</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-title">Viento</div>
+                <div id="kpi-wind" class="kpi-value">-- km/h</div>
+                <div class="kpi-sub">Velocidad del viento</div>
+            </div>
+        </section>
+
+        <!-- Gráficos evolutivos -->
+        <section class="charts-section">
+            <div class="chart-container">
+                <h3>Evolución de Temperatura (24h)</h3>
+                <canvas id="tempChart"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <h3>Humedad y Probabilidad de Lluvia</h3>
+                <canvas id="humidityChart"></canvas>
             </div>
         </section>
     </main>
 
+    <footer class="app-footer">
+        <p>&copy; 2026 Meteorytics — Atmospheric Data Intelligence</p>
+    </footer>
+
+    <script src="js/api.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
