@@ -75,19 +75,44 @@ public class WeatherController implements HttpHandler {
      */
     private String toJson(Forecast forecast) {
         CurrentWeather cur = forecast.getCurrent();
+        
+        // Calcular analíticas atmosféricas avanzadas
+        double maxTemp = cur.getTemperature();
+        double minTemp = cur.getTemperature();
+        int maxRainProb = 0;
+        for (HourlyWeather h : forecast.getHourly()) {
+            if (h.getTemperature() > maxTemp) maxTemp = h.getTemperature();
+            if (h.getTemperature() < minTemp) minTemp = h.getTemperature();
+            if (h.getPrecipitationProbability() > maxRainProb) maxRainProb = h.getPrecipitationProbability();
+        }
+
+        String comfort = (cur.getTemperature() >= 18 && cur.getTemperature() <= 25 && cur.getHumidity() <= 60)
+                ? "Confortable (Óptimo)"
+                : (cur.getTemperature() > 25 ? "Cálido / Bochorno" : "Fresco / Frío");
+
+        String rainRisk = maxRainProb > 70 ? "Alto (" + maxRainProb + "%)" : (maxRainProb > 30 ? "Moderado (" + maxRainProb + "%)" : "Bajo (" + maxRainProb + "%)");
+        String windStatus = cur.getWindSpeed() > 30 ? "Viento Fuerte" : (cur.getWindSpeed() > 15 ? "Brisa Moderada" : "Calma");
+
         StringBuilder sb = new StringBuilder();
         sb.append("{");
-        sb.append(String.format("\"location\":{\"name\":\"%s\",\"latitude\":%.4f,\"longitude\":%.4f},",
-                forecast.getLocation().getName(), forecast.getLocation().getLatitude(), forecast.getLocation().getLongitude()).replace(',', '.'));
+        sb.append(String.format(java.util.Locale.ROOT,
+                "\"location\":{\"name\":\"%s\",\"latitude\":%.4f,\"longitude\":%.4f},",
+                forecast.getLocation().getName().replace("\"", "\\\""), forecast.getLocation().getLatitude(), forecast.getLocation().getLongitude()));
         
-        sb.append(String.format("\"current\":{\"temperature\":%.1f,\"apparentTemperature\":%.1f,\"humidity\":%d,\"pressure\":%.1f,\"windSpeed\":%.1f},",
-                cur.getTemperature(), cur.getApparentTemperature(), cur.getHumidity(), cur.getPressure(), cur.getWindSpeed()).replace(',', '.'));
+        sb.append(String.format(java.util.Locale.ROOT,
+                "\"current\":{\"temperature\":%.1f,\"apparentTemperature\":%.1f,\"humidity\":%d,\"pressure\":%.1f,\"windSpeed\":%.1f},",
+                cur.getTemperature(), cur.getApparentTemperature(), cur.getHumidity(), cur.getPressure(), cur.getWindSpeed()));
         
+        sb.append(String.format(java.util.Locale.ROOT,
+                "\"analytics\":{\"thermalComfort\":\"%s\",\"maxTemperature\":%.1f,\"minTemperature\":%.1f,\"rainRisk\":\"%s\",\"windStatus\":\"%s\"},",
+                comfort, maxTemp, minTemp, rainRisk, windStatus));
+
         sb.append("\"hourly\":[");
         for (int i = 0; i < forecast.getHourly().size(); i++) {
             HourlyWeather h = forecast.getHourly().get(i);
-            sb.append(String.format("{\"time\":\"%s\",\"temperature\":%.1f,\"humidity\":%d,\"precipitationProbability\":%d,\"windSpeed\":%.1f}",
-                    h.getTime(), h.getTemperature(), h.getHumidity(), h.getPrecipitationProbability(), h.getWindSpeed()).replace(',', '.'));
+            sb.append(String.format(java.util.Locale.ROOT,
+                    "{\"time\":\"%s\",\"temperature\":%.1f,\"humidity\":%d,\"precipitationProbability\":%d,\"windSpeed\":%.1f}",
+                    h.getTime(), h.getTemperature(), h.getHumidity(), h.getPrecipitationProbability(), h.getWindSpeed()));
             if (i < forecast.getHourly().size() - 1) sb.append(",");
         }
         sb.append("]}");

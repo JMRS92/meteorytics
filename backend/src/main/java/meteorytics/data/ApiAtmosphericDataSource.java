@@ -115,21 +115,23 @@ public class ApiAtmosphericDataSource implements AtmosphericDataSource {
             String jsonResponse = sendHttpRequest(url);
             List<Location> results = new ArrayList<>();
 
-            // Parsear resultados simples del JSON de geocodificación
-            int resultsIndex = jsonResponse.indexOf("\"results\":[");
-            if (resultsIndex != -1) {
-                String resultsArray = jsonResponse.substring(resultsIndex + 11);
-                String[] items = resultsArray.split("\\},\\{");
-                for (String item : items) {
-                    String name = JsonUtils.extractString(item, "name");
-                    String country = JsonUtils.extractString(item, "country");
-                    double lat = JsonUtils.extractDouble(item, "latitude", 0.0);
-                    double lon = JsonUtils.extractDouble(item, "longitude", 0.0);
+            List<String> items = JsonUtils.extractJsonArrayObjects(jsonResponse, "results");
+            for (String item : items) {
+                String name = JsonUtils.extractString(item, "name");
+                String country = JsonUtils.extractString(item, "country");
+                String admin1 = JsonUtils.extractString(item, "admin1");
+                double lat = JsonUtils.extractDouble(item, "latitude", 0.0);
+                double lon = JsonUtils.extractDouble(item, "longitude", 0.0);
 
-                    if (name != null && (lat != 0.0 || lon != 0.0)) {
-                        String fullName = country != null ? name + ", " + country : name;
-                        results.add(new Location(fullName, lat, lon));
+                if (name != null && (lat != 0.0 || lon != 0.0)) {
+                    StringBuilder sb = new StringBuilder(name);
+                    if (admin1 != null && !admin1.isEmpty() && !admin1.equalsIgnoreCase(name)) {
+                        sb.append(" (").append(admin1).append(")");
                     }
+                    if (country != null && !country.isEmpty()) {
+                        sb.append(", ").append(country);
+                    }
+                    results.add(new Location(sb.toString(), lat, lon));
                 }
             }
 

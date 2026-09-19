@@ -1,9 +1,12 @@
 package meteorytics.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Utilidad liviana para extracción de valores JSON sin dependencias externas.
  * 
- * Permite obtener valores numéricos y cadenas de texto directamente de respuestas JSON.
+ * Permite obtener valores numéricos, cadenas de texto y arrays de objetos directamente de respuestas JSON.
  * 
  * @author Meteorytics Team
  */
@@ -75,5 +78,44 @@ public class JsonUtils {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * Extrae los bloques JSON de un array denominado arrayKey (ej. "results": [{...}, {...}]).
+     *
+     * @param json Cadena de texto en formato JSON
+     * @param arrayKey Clave del array JSON
+     * @return Lista de bloques de objetos JSON encontrados
+     */
+    public static List<String> extractJsonArrayObjects(String json, String arrayKey) {
+        List<String> objects = new ArrayList<>();
+        try {
+            String pattern = "\"" + arrayKey + "\":[";
+            int index = json.indexOf(pattern);
+            if (index == -1) return objects;
+
+            int start = index + pattern.length();
+            int depth = 0;
+            int objStart = -1;
+
+            for (int i = start; i < json.length(); i++) {
+                char c = json.charAt(i);
+                if (c == '{') {
+                    if (depth == 0) objStart = i;
+                    depth++;
+                } else if (c == '}') {
+                    depth--;
+                    if (depth == 0 && objStart != -1) {
+                        objects.add(json.substring(objStart, i + 1));
+                        objStart = -1;
+                    }
+                } else if (c == ']' && depth == 0) {
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            // Retorna lo extraído hasta el momento si ocurre algún fallo de parsing
+        }
+        return objects;
     }
 }
