@@ -82,8 +82,14 @@ public class Main {
             }
 
             File file = new File(baseDir + path);
+            if (!file.exists()) {
+                file = new File("../" + baseDir + path);
+            }
             if (!file.exists() || file.isDirectory()) {
                 file = new File(baseDir + "/index.html");
+                if (!file.exists()) {
+                    file = new File("../" + baseDir + "/index.html");
+                }
             }
 
             String contentType = Files.probeContentType(file.toPath());
