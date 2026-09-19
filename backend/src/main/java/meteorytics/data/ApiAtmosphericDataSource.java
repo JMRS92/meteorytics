@@ -87,15 +87,25 @@ public class ApiAtmosphericDataSource implements AtmosphericDataSource {
 
         try {
             List<HourlyWeather> hourlyList = new ArrayList<>();
-            for (int h = 0; h < 24; h++) {
-                String timeLabel = String.format("%02d:00", h);
-                double temp = JsonUtils.extractDouble(jsonResponse, "temperature_2m", 20.0) + (Math.sin(h / 3.0) * 4);
-                int hum = Math.min(100, Math.max(20, JsonUtils.extractInt(jsonResponse, "relative_humidity_2m", 50) + (int)(Math.cos(h / 3.0) * 15)));
-                int prob = Math.min(100, Math.max(0, (h % 5) * 15));
-                double wind = Math.max(0.0, JsonUtils.extractDouble(jsonResponse, "wind_speed_10m", 12.0) + (h % 3));
+            List<String> times = JsonUtils.extractStringArray(jsonResponse, "time");
+            List<Double> temps = JsonUtils.extractDoubleArray(jsonResponse, "temperature_2m");
+            List<Double> humidities = JsonUtils.extractDoubleArray(jsonResponse, "relative_humidity_2m");
+            List<Double> precipProbs = JsonUtils.extractDoubleArray(jsonResponse, "precipitation_probability");
+            List<Double> winds = JsonUtils.extractDoubleArray(jsonResponse, "wind_speed_10m");
 
-                hourlyList.add(new HourlyWeather(timeLabel, Math.round(temp * 10.0) / 10.0, hum, prob, Math.round(wind * 10.0) / 10.0));
+            int count = Math.min(times.size(), Math.min(temps.size(), Math.min(humidities.size(), Math.min(precipProbs.size(), winds.size()))));
+
+            for (int i = 0; i < count; i++) {
+                String rawTime = times.get(i);
+                String timeLabel = rawTime.contains("T") ? rawTime.split("T")[1] : rawTime;
+                double temp = temps.get(i);
+                int hum = humidities.get(i).intValue();
+                int prob = precipProbs.get(i).intValue();
+                double wind = winds.get(i);
+
+                hourlyList.add(new HourlyWeather(timeLabel, temp, hum, prob, wind));
             }
+
             return hourlyList;
         } catch (Exception e) {
             throw new DataProcessingException("Error al procesar los datos horarios de la API.");

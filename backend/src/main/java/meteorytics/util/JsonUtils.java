@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Utilidad liviana para extracción de valores JSON sin dependencias externas.
  * 
- * Permite obtener valores numéricos, cadenas de texto y arrays de objetos directamente de respuestas JSON.
+ * Permite obtener valores numéricos, cadenas de texto, arrays de objetos y arrays simples directamente de respuestas JSON.
  * 
  * @author Meteorytics Team
  */
@@ -81,7 +81,66 @@ public class JsonUtils {
     }
 
     /**
-     * Extrae los bloques JSON de un array denominado arrayKey (ej. "results": [{...}, {...}]).
+     * Extrae un array de valores de punto flotante (double) de un JSON.
+     *
+     * @param json Cadena de texto JSON
+     * @param key Clave del array (ej. "temperature_2m")
+     * @return Lista de valores numéricos extraídos
+     */
+    public static List<Double> extractDoubleArray(String json, String key) {
+        List<Double> list = new ArrayList<>();
+        try {
+            String pattern = "\"" + key + "\":[";
+            int index = json.indexOf(pattern);
+            if (index == -1) return list;
+
+            int start = index + pattern.length();
+            int end = json.indexOf("]", start);
+            if (end == -1) return list;
+
+            String arrayContent = json.substring(start, end);
+            String[] tokens = arrayContent.split(",");
+            for (String token : tokens) {
+                try {
+                    list.add(Double.parseDouble(token.trim()));
+                } catch (NumberFormatException ignored) {}
+            }
+        } catch (Exception ignored) {}
+        return list;
+    }
+
+    /**
+     * Extrae un array de cadenas de texto (String) de un JSON.
+     *
+     * @param json Cadena de texto JSON
+     * @param key Clave del array (ej. "time")
+     * @return Lista de cadenas de texto extraídas
+     */
+    public static List<String> extractStringArray(String json, String key) {
+        List<String> list = new ArrayList<>();
+        try {
+            String pattern = "\"" + key + "\":[";
+            int index = json.indexOf(pattern);
+            if (index == -1) return list;
+
+            int start = index + pattern.length();
+            int end = json.indexOf("]", start);
+            if (end == -1) return list;
+
+            String arrayContent = json.substring(start, end);
+            String[] tokens = arrayContent.split(",");
+            for (String token : tokens) {
+                String clean = token.trim().replace("\"", "");
+                if (!clean.isEmpty()) {
+                    list.add(clean);
+                }
+            }
+        } catch (Exception ignored) {}
+        return list;
+    }
+
+    /**
+     * Extrae los bloques JSON de un array de objetos denominado arrayKey.
      *
      * @param json Cadena de texto en formato JSON
      * @param arrayKey Clave del array JSON

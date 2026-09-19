@@ -45,22 +45,22 @@
                     <i class="bi bi-crosshair"></i> Permitir mi ubicación GPS
                 </button>
                 <button id="btn-dismiss-location" class="btn btn-outline-secondary btn-sm">
-                    Buscar ciudad manualmente
+                    Buscar ubicación manualmente
                 </button>
             </div>
         </div>
 
-        <!-- Buscador Interactivo Tipo Google Places (Auto-sugerencias) -->
+        <!-- Buscador Dinámico de Ubicación por Geocodificación (100% Real API) -->
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-body">
-                <div class="row g-3 align-items-center justify-content-between">
-                    <div class="col-12 col-md-8 position-relative">
+                <div class="row g-3 align-items-center">
+                    <div class="col-12 col-lg-9 position-relative">
                         <label for="search-input" class="form-label fw-semibold small text-muted mb-1">
                             <i class="bi bi-search text-primary me-1"></i> Buscar cualquier ciudad, país o dirección:
                         </label>
-                        <div class="input-group">
-                            <input id="search-input" type="text" class="form-control" placeholder="Escribe 'Lima', 'Madrid', 'Pamplona', 'Buenos Aires'..." autocomplete="off">
-                            <button id="btn-search" class="btn btn-primary px-4 d-flex align-items-center gap-2" type="button">
+                        <div class="input-group input-group-lg">
+                            <input id="search-input" type="text" class="form-control fs-6" placeholder="Escribe 'Madrid', 'Barcelona', 'Lima', 'Tokio', 'Pamplona'..." autocomplete="off">
+                            <button id="btn-search" class="btn btn-primary px-4 d-flex align-items-center gap-2 fs-6" type="button">
                                 <i class="bi bi-search"></i> Buscar
                             </button>
                         </div>
@@ -68,20 +68,10 @@
                         <div id="search-results" class="list-group position-absolute w-100 shadow-lg mt-1 d-none" style="z-index: 1050; max-height: 280px; overflow-y: auto; top: 100%;"></div>
                     </div>
 
-                    <div class="col-12 col-md-4 d-flex flex-column align-items-md-end justify-content-center">
-                        <label for="city-select" class="form-label fw-semibold small text-muted mb-1">Acceso Rápido:</label>
-                        <div class="d-flex gap-2">
-                            <select id="city-select" class="form-select form-select-sm w-auto">
-                                <option value="madrid" data-lat="40.4168" data-lon="-3.7038">Madrid, España</option>
-                                <option value="barcelona" data-lat="41.3879" data-lon="2.1699">Barcelona, España</option>
-                                <option value="lima" data-lat="-12.0431" data-lon="-77.0282">Lima, Perú</option>
-                                <option value="sevilla" data-lat="37.3891" data-lon="-5.9845">Sevilla, España</option>
-                                <option value="buenos_aires" data-lat="-34.6037" data-lon="-58.3816">Buenos Aires, Argentina</option>
-                            </select>
-                            <button id="btn-refresh" class="btn btn-sm btn-outline-primary" title="Actualizar datos">
-                                <i class="bi bi-arrow-clockwise"></i>
-                            </button>
-                        </div>
+                    <div class="col-12 col-lg-3 d-flex align-items-end justify-content-lg-end pt-2 pt-lg-0">
+                        <button id="btn-request-gps" class="btn btn-outline-primary btn-lg w-100 d-flex align-items-center justify-content-center gap-2 fs-6">
+                            <i class="bi bi-crosshair"></i> Mi Ubicación GPS
+                        </button>
                     </div>
                 </div>
 
@@ -177,12 +167,12 @@
             </div>
         </div>
 
-        <!-- 3 Gráficos Interactivos de Comparativa y Evolución -->
+        <!-- 3 Gráficos Interactivos con Datos Reales -->
         <div class="row g-4">
             <div class="col-12 col-lg-6">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-header bg-white border-0 pt-3 fw-bold text-dark">
-                        <i class="bi bi-graph-up-arrow text-primary me-2"></i> Evolución de Temperatura vs Sensación Térmica (24h)
+                        <i class="bi bi-graph-up-arrow text-primary me-2"></i> Evolución de Temperatura (24h Real API)
                     </div>
                     <div class="card-body">
                         <canvas id="tempChart"></canvas>
