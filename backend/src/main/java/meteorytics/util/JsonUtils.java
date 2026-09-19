@@ -1,8 +1,5 @@
 package meteorytics.util;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Utilidad liviana para extracción de valores JSON sin dependencias externas.
  * <p>
@@ -65,15 +62,17 @@ public class JsonUtils {
      */
     public static String extractString(String json, String key) {
         try {
-            String pattern = "\"" + key + "\":\"";
+            String pattern = "\"" + key + "\":";
             int index = json.indexOf(pattern);
             if (index == -1) return null;
             
-            int start = index + pattern.length();
-            int end = json.indexOf("\"", start);
-            if (end == -1) return null;
+            int startQuote = json.indexOf("\"", index + pattern.length());
+            if (startQuote == -1) return null;
             
-            return json.substring(start, end);
+            int endQuote = json.indexOf("\"", startQuote + 1);
+            if (endQuote == -1) return null;
+            
+            return json.substring(startQuote + 1, endQuote);
         } catch (Exception e) {
             return null;
         }
