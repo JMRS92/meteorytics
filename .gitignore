@@ -1,0 +1,23 @@
+# Local documentation (not committed)
+Meteorytics_Documentation/
+
+# Java compile output
+*.class
+*.jar
+*.war
+*.ear
+target/
+bin/
+build/
+
+# IDE / Editor files
+.idea/
+*.iml
+.settings/
+.classpath
+.project
+.vscode/
+
+# System files
+.DS_Store
+Thumbs.db
