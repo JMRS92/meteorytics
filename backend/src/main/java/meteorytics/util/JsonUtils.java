@@ -2,9 +2,8 @@ package meteorytics.util;
 
 /**
  * Utilidad liviana para extracción de valores JSON sin dependencias externas.
- * <p>
+ * 
  * Permite obtener valores numéricos y cadenas de texto directamente de respuestas JSON.
- * </p>
  * 
  * @author Meteorytics Team
  */

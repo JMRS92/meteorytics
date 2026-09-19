@@ -17,10 +17,9 @@ import java.util.List;
 
 /**
  * Implementación concreta de {@link AtmosphericDataSource} que consume la API de Open-Meteo.
- * <p>
+ * 
  * Utiliza el cliente HTTP nativo del JDK {@link HttpClient} para realizar peticiones asíncronas/síncronas.
  * Aísla la estructura de respuesta específica de Open-Meteo transformándola en modelos internos de Meteorytics.
- * </p>
  * 
  * @author Meteorytics Team
  */

@@ -10,10 +10,9 @@ import java.util.List;
 
 /**
  * Interfaz que abstrae el origen de datos meteorológicos externos.
- * <p>
+ * 
  * Aísla a la aplicación de proveedores específicos (como Open-Meteo o WeatherAPI),
  * garantizando la regla del 80% de abstracción en el núcleo de Meteorytics.
- * </p>
  * 
  * @author Meteorytics Team
  */

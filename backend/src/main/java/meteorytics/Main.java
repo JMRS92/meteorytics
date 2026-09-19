@@ -17,10 +17,9 @@ import java.nio.file.Files;
 
 /**
  * Clase principal y punto de entrada para la aplicación Meteorytics Backend.
- * <p>
+ * 
  * Inicializa el servidor HTTP embebido del JDK {@link HttpServer} en el puerto 8080,
  * configura los servicios de negocio y registra los controladores REST y el servidor de archivos estáticos.
- * </p>
  * 
  * @author Meteorytics Team
  * @version 1.0.0

@@ -8,9 +8,8 @@ import meteorytics.util.JsonUtils;
 
 /**
  * Suite de pruebas unitarias puras en Java para verificar la lógica del backend.
- * <p>
+ * 
  * Ejecuta aserciones sobre modelos, utilidades de JSON y validaciones de dominio.
- * </p>
  * 
  * @author Meteorytics Team
  */
