@@ -18,8 +18,6 @@
     </properties>
 
     <build>
-        <sourceDirectory>backend/src/main/java</sourceDirectory>
-        <testSourceDirectory>backend/src/test/java</testSourceDirectory>
         <plugins>
             <!-- Maven Compiler Plugin -->
             <plugin>
