@@ -1,5 +1,5 @@
 /**
- * Controlador principal de la interfaz web de Meteorytics.
+ * Controlador principal de la interfaz web de Meteorytics con Bootstrap 5.3.
  */
 document.addEventListener('DOMContentLoaded', () => {
     // Referencias a elementos DOM
@@ -15,13 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let tempChartInstance = null;
     let humidityChartInstance = null;
 
-    // Inicializar aplicación
     init();
 
     function init() {
         setupEventListeners();
         
-        // Comprobar si el usuario ya dio preferencia previa de ubicación
+        // Comprobar preferencia guardada de ubicación
         const savedGeoPref = localStorage.getItem('meteorytics_use_geo');
         if (savedGeoPref === 'true') {
             requestUserLocation();
@@ -38,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         btnDismissLocation.addEventListener('click', () => {
             localStorage.setItem('meteorytics_use_geo', 'false');
-            geoBanner.classList.add('hidden');
+            geoBanner.classList.add('d-none');
             loadSelectedCity();
         });
 
@@ -57,23 +56,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Solicita acceso a la ubicación geográfica real del usuario mediante la API navigator.geolocation.
+     * Solicita acceso a la geolocalización del navegador.
      */
     function requestUserLocation() {
         if (!navigator.geolocation) {
-            showStatus('La geolocalización no está soportada por tu navegador.', 'error');
+            showStatus('La geolocalización no está soportada por tu navegador.', 'danger');
             loadSelectedCity();
             return;
         }
 
-        showStatus('Obteniendo tu ubicación geográfica en tiempo real...', 'info');
+        showStatus('Obteniendo tu ubicación en tiempo real...', 'info');
 
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
                 
-                geoBanner.classList.add('hidden');
+                geoBanner.classList.add('d-none');
                 hideStatus();
                 updateLocationBadge(`📍 Ubicación Real (${lat.toFixed(2)}°, ${lon.toFixed(2)}°)`);
                 fetchAndRenderWeather(lat, lon, 'Tu Ubicación');
@@ -82,28 +81,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 let errorText = 'No se pudo acceder a tu ubicación.';
                 switch (error.code) {
                     case error.PERMISSION_DENIED:
-                        errorText = 'Acceso a la ubicación denegado por el usuario.';
+                        errorText = 'Acceso a ubicación denegado.';
                         break;
                     case error.POSITION_UNAVAILABLE:
-                        errorText = 'La información de ubicación no está disponible.';
+                        errorText = 'Ubicación no disponible.';
                         break;
                     case error.TIMEOUT:
-                        errorText = 'Tiempo de espera agotado al obtener la ubicación.';
+                        errorText = 'Tiempo de espera agotado al obtener ubicación.';
                         break;
                 }
-                showStatus(`${errorText} Cargando ciudad por defecto.`, 'error');
+                showStatus(`${errorText} Cargando ciudad seleccionada.`, 'warning');
                 loadSelectedCity();
             },
-            {
-                enableHighAccuracy: true,
-                timeout: 8000,
-                maximumAge: 0
-            }
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
         );
     }
 
     /**
-     * Carga el clima de la ciudad seleccionada en el menú desplegable.
+     * Carga el clima para la ciudad seleccionada.
      */
     function loadSelectedCity() {
         const selectedOption = citySelect.options[citySelect.selectedIndex];
@@ -116,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Consulta la API meteorológica y renderiza la información en la UI.
+     * Consulta la API backend de Meteorytics y renderiza datos.
      */
     async function fetchAndRenderWeather(lat, lon, name) {
         try {
@@ -124,23 +119,23 @@ document.addEventListener('DOMContentLoaded', () => {
             renderKPIs(data.current);
             renderCharts(data.hourly);
         } catch (err) {
-            showStatus(`Error al cargar datos meteorológicos: ${err.message}`, 'error');
+            showStatus(`Error al cargar datos meteorológicos: ${err.message}`, 'danger');
         }
     }
 
     /**
-     * Renderiza las tarjetas de KPIs meteorológicos.
+     * Renderiza las tarjetas KPI de Bootstrap.
      */
     function renderKPIs(current) {
         document.getElementById('kpi-temp').textContent = `${current.temperature.toFixed(1)} °C`;
-        document.getElementById('kpi-apparent').textContent = `Sensación: ${current.apparentTemperature.toFixed(1)} °C`;
+        document.getElementById('kpi-apparent').innerHTML = `<i class="bi bi-thermometer-half"></i> Sensación: ${current.apparentTemperature.toFixed(1)} °C`;
         document.getElementById('kpi-humidity').textContent = `${current.humidity} %`;
         document.getElementById('kpi-pressure').textContent = `${current.pressure.toFixed(1)} hPa`;
         document.getElementById('kpi-wind').textContent = `${current.windSpeed.toFixed(1)} km/h`;
     }
 
     /**
-     * Renderiza los gráficos evolutivos con Chart.js.
+     * Renderiza los gráficos de Chart.js dentro de tarjetas de Bootstrap.
      */
     function renderCharts(hourlyList) {
         const labels = hourlyList.map(h => h.time);
@@ -148,7 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const humidities = hourlyList.map(h => h.humidity);
         const precipProbs = hourlyList.map(h => h.precipitationProbability);
 
-        // Gráfico 1: Temperatura
         const ctxTemp = document.getElementById('tempChart').getContext('2d');
         if (tempChartInstance) tempChartInstance.destroy();
         tempChartInstance = new Chart(ctxTemp, {
@@ -158,8 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 datasets: [{
                     label: 'Temperatura (°C)',
                     data: temps,
-                    borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
                     fill: true,
                     tension: 0.3
                 }]
@@ -170,7 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Gráfico 2: Humedad y Precipitación
         const ctxHumidity = document.getElementById('humidityChart').getContext('2d');
         if (humidityChartInstance) humidityChartInstance.destroy();
         humidityChartInstance = new Chart(ctxHumidity, {
@@ -181,12 +174,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         label: 'Humedad (%)',
                         data: humidities,
-                        backgroundColor: 'rgba(14, 165, 233, 0.6)'
+                        backgroundColor: 'rgba(13, 202, 240, 0.6)'
                     },
                     {
                         label: 'Prob. Lluvia (%)',
                         data: precipProbs,
-                        backgroundColor: 'rgba(99, 102, 241, 0.6)'
+                        backgroundColor: 'rgba(255, 193, 7, 0.6)'
                     }
                 ]
             },
@@ -198,16 +191,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateLocationBadge(text) {
-        locationBadge.textContent = text;
+        locationBadge.innerHTML = `<i class="bi bi-geo-fill me-1"></i> ${text}`;
     }
 
     function showStatus(message, type = 'info') {
         statusMessage.textContent = message;
-        statusMessage.className = `status-message ${type}`;
-        statusMessage.classList.remove('hidden');
+        statusMessage.className = `alert alert-${type} mb-4`;
+        statusMessage.classList.remove('d-none');
     }
 
     function hideStatus() {
-        statusMessage.classList.add('hidden');
+        statusMessage.classList.add('d-none');
     }
 });

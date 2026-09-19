@@ -4,95 +4,156 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meteorytics - Atmospheric Data Intelligence</title>
+    <!-- Bootstrap 5.3 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css">
-    <!-- Chart.js para visualizaciones -->
+    <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
-    <header class="app-header">
-        <div class="header-container">
-            <h1 class="logo">Meteorytics</h1>
-            <p class="tagline">Atmospheric Data Intelligence</p>
-        </div>
-    </header>
+<body class="bg-light d-flex flex-column min-vh-100">
 
-    <main class="main-container">
-        <!-- Banner de solicitud de ubicación por geolocalización -->
-        <section id="geo-banner" class="geo-banner">
-            <div class="geo-content">
-                <span class="geo-icon">📍</span>
-                <p>¿Deseas permitir acceso a tu ubicación en tiempo real para obtener datos meteorológicos precisos?</p>
-                <div class="geo-buttons">
-                    <button id="btn-use-location" class="btn btn-primary">Usar mi ubicación real</button>
-                    <button id="btn-dismiss-location" class="btn btn-secondary">Usar ubicación por defecto</button>
+    <!-- Navbar / Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                <i class="bi bi-cloud-sun-fill fs-3"></i>
+                <div>
+                    <span class="fw-bold fs-4 d-block lh-1">Meteorytics</span>
+                    <small class="text-white-50 fs-7">Atmospheric Data Intelligence</small>
+                </div>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="container my-4 flex-grow-1">
+
+        <!-- Banner de Geolocalización -->
+        <div id="geo-banner" class="alert alert-info alert-dismissible fade show shadow-sm border-0 d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-geo-alt-fill fs-4 text-primary"></i>
+                <div>
+                    <strong>¿Usar ubicación real?</strong>
+                    <span class="d-block text-muted small">Permite obtener condiciones meteorológicas precisas de tu posición actual.</span>
                 </div>
             </div>
-        </section>
-
-        <!-- Selector manual de ciudad -->
-        <section class="controls-section">
-            <div class="location-selector">
-                <label for="city-select">Seleccionar ubicación:</label>
-                <select id="city-select" class="form-select">
-                    <option value="madrid" data-lat="40.4168" data-lon="-3.7038">Madrid, España</option>
-                    <option value="barcelona" data-lat="41.3879" data-lon="2.1699">Barcelona, España</option>
-                    <option value="valencia" data-lat="39.4699" data-lon="-0.3763">Valencia, España</option>
-                    <option value="sevilla" data-lat="37.3891" data-lon="-5.9845">Sevilla, España</option>
-                    <option value="bilbao" data-lat="43.2630" data-lon="-2.9350">Bilbao, España</option>
-                </select>
-                <button id="btn-refresh" class="btn btn-icon">🔄 Actualizar</button>
+            <div class="d-flex gap-2">
+                <button id="btn-use-location" class="btn btn-primary btn-sm d-flex align-items-center gap-1">
+                    <i class="bi bi-crosshair"></i> Usar mi ubicación real
+                </button>
+                <button id="btn-dismiss-location" class="btn btn-outline-secondary btn-sm">
+                    Usar por defecto
+                </button>
             </div>
-            <div id="location-badge" class="location-badge">Ubicación actual: Madrid</div>
-        </section>
+        </div>
 
-        <!-- Mensaje de estado/error -->
-        <div id="status-message" class="status-message hidden"></div>
-
-        <!-- Tarjetas de KPIs actuales -->
-        <section class="kpi-grid">
-            <div class="kpi-card">
-                <div class="kpi-title">Temperatura</div>
-                <div id="kpi-temp" class="kpi-value">-- °C</div>
-                <div id="kpi-apparent" class="kpi-sub">Sensación: -- °C</div>
+        <!-- Barra de Control y Selector -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <label for="city-select" class="form-label mb-0 fw-semibold">Ubicación:</label>
+                    <select id="city-select" class="form-select form-select-sm w-auto">
+                        <option value="madrid" data-lat="40.4168" data-lon="-3.7038">Madrid, España</option>
+                        <option value="barcelona" data-lat="41.3879" data-lon="2.1699">Barcelona, España</option>
+                        <option value="valencia" data-lat="39.4699" data-lon="-0.3763">Valencia, España</option>
+                        <option value="sevilla" data-lat="37.3891" data-lon="-5.9845">Sevilla, España</option>
+                        <option value="bilbao" data-lat="43.2630" data-lon="-2.9350">Bilbao, España</option>
+                    </select>
+                    <button id="btn-refresh" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1">
+                        <i class="bi bi-arrow-clockwise"></i> Actualizar
+                    </button>
+                </div>
+                <span id="location-badge" class="badge bg-secondary fs-6 py-2 px-3 rounded-pill">
+                    <i class="bi bi-geo-fill me-1"></i> Ubicación actual: Madrid
+                </span>
             </div>
+        </div>
 
-            <div class="kpi-card">
-                <div class="kpi-title">Humedad</div>
-                <div id="kpi-humidity" class="kpi-value">-- %</div>
-                <div class="kpi-sub">Humedad relativa</div>
-            </div>
+        <!-- Mensajes de Estado / Alertas -->
+        <div id="status-message" class="alert d-none mb-4" role="alert"></div>
 
-            <div class="kpi-card">
-                <div class="kpi-title">Presión</div>
-                <div id="kpi-pressure" class="kpi-value">-- hPa</div>
-                <div class="kpi-sub">Presión superficial</div>
-            </div>
-
-            <div class="kpi-card">
-                <div class="kpi-title">Viento</div>
-                <div id="kpi-wind" class="kpi-value">-- km/h</div>
-                <div class="kpi-sub">Velocidad del viento</div>
-            </div>
-        </section>
-
-        <!-- Gráficos evolutivos -->
-        <section class="charts-section">
-            <div class="chart-container">
-                <h3>Evolución de Temperatura (24h)</h3>
-                <canvas id="tempChart"></canvas>
+        <!-- KPIs Meteorológicos -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card shadow-sm border-0 h-100 border-start border-primary border-4">
+                    <div class="card-body">
+                        <div class="text-muted small text-uppercase fw-bold">Temperatura</div>
+                        <div id="kpi-temp" class="fs-2 fw-bold text-dark my-1">-- °C</div>
+                        <div id="kpi-apparent" class="text-muted small"><i class="bi bi-thermometer-half"></i> Sensación: -- °C</div>
+                    </div>
+                </div>
             </div>
 
-            <div class="chart-container">
-                <h3>Humedad y Probabilidad de Lluvia</h3>
-                <canvas id="humidityChart"></canvas>
+            <div class="col-6 col-md-3">
+                <div class="card shadow-sm border-0 h-100 border-start border-info border-4">
+                    <div class="card-body">
+                        <div class="text-muted small text-uppercase fw-bold">Humedad</div>
+                        <div id="kpi-humidity" class="fs-2 fw-bold text-dark my-1">-- %</div>
+                        <div class="text-muted small"><i class="bi bi-droplet-fill"></i> Humedad relativa</div>
+                    </div>
+                </div>
             </div>
-        </section>
+
+            <div class="col-6 col-md-3">
+                <div class="card shadow-sm border-0 h-100 border-start border-warning border-4">
+                    <div class="card-body">
+                        <div class="text-muted small text-uppercase fw-bold">Presión</div>
+                        <div id="kpi-pressure" class="fs-2 fw-bold text-dark my-1">-- hPa</div>
+                        <div class="text-muted small"><i class="bi bi-speedometer2"></i> Presión superficie</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="card shadow-sm border-0 h-100 border-start border-success border-4">
+                    <div class="card-body">
+                        <div class="text-muted small text-uppercase fw-bold">Viento</div>
+                        <div id="kpi-wind" class="fs-2 fw-bold text-dark my-1">-- km/h</div>
+                        <div class="text-muted small"><i class="bi bi-wind"></i> Velocidad viento</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos Evolutivos -->
+        <div class="row g-4">
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-0 pt-3 fw-bold text-dark">
+                        <i class="bi bi-graph-up-arrow text-primary me-2"></i> Evolución de Temperatura (24h)
+                    </div>
+                    <div class="card-body">
+                        <canvas id="tempChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-0 pt-3 fw-bold text-dark">
+                        <i class="bi bi-bar-chart-line-fill text-info me-2"></i> Humedad y Probabilidad de Lluvia
+                    </div>
+                    <div class="card-body">
+                        <canvas id="humidityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
-    <footer class="app-footer">
-        <p>&copy; 2026 Meteorytics — Atmospheric Data Intelligence</p>
+    <!-- Footer -->
+    <footer class="bg-white border-top py-3 text-center text-muted small mt-auto">
+        <div class="container">
+            &copy; 2026 <strong>Meteorytics</strong> — Atmospheric Data Intelligence
+        </div>
     </footer>
 
+    <!-- Bootstrap 5.3 JS Bundle CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/api.js"></script>
     <script src="js/main.js"></script>
 </body>
