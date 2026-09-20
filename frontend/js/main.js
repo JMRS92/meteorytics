@@ -81,12 +81,16 @@ document.addEventListener('DOMContentLoaded', () => {
             handleSearchDebounced();
         });
 
-        btnSearch.addEventListener('click', handleSearch);
+        // Search button click executes direct search & loads weather for best match
+        btnSearch.addEventListener('click', () => {
+            performDirectSearch();
+        });
 
+        // Enter key executes direct search & loads weather for best match
         searchInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                handleSearch();
+                performDirectSearch();
             }
         });
 
@@ -135,15 +139,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Debounced search handler for fluid autocomplete suggestions.
+     * Debounced search handler for fluid autocomplete suggestions while typing.
      */
     let searchTimeout = null;
     function handleSearchDebounced() {
         clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(handleSearch, 300);
+        searchTimeout = setTimeout(handleSearchSuggestions, 300);
     }
 
-    async function handleSearch() {
+    async function handleSearchSuggestions() {
         const query = searchInput.value.trim();
         if (query.length < 2) {
             searchResults.classList.add('d-none');
@@ -159,12 +163,43 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * Executes direct search (on Search button click or Enter key), fetching the top match immediately.
+     */
+    async function performDirectSearch() {
+        const query = searchInput.value.trim();
+        if (query.length < 2) return;
+
+        try {
+            showStatus(I18n.get('statusLoadingWeather'), 'info');
+            const locations = await MeteoryticsAPI.searchLocations(query);
+            searchResults.classList.add('d-none');
+
+            if (locations && locations.length > 0) {
+                const topMatch = locations[0];
+                currentLat = topMatch.latitude;
+                currentLon = topMatch.longitude;
+                currentName = topMatch.name;
+
+                localStorage.setItem('meteorytics_use_geo', 'false');
+                geoBanner.classList.add('d-none');
+                searchInput.value = topMatch.name;
+
+                fetchAndRenderWeather(currentLat, currentLon, currentName);
+            } else {
+                showStatus(I18n.get('statusNoLocationFound'), 'warning');
+            }
+        } catch (err) {
+            showStatus(`${I18n.get('statusWeatherError')} ${err.message}`, 'danger');
+        }
+    }
+
+    /**
      * Render dynamic autocomplete menu suggestions.
      */
     function renderSearchResults(locations) {
         searchResults.innerHTML = '';
         if (!locations || locations.length === 0) {
-            searchResults.innerHTML = `<div class="list-group-item disabled small text-muted">${I18n.currentLang === 'es' ? 'No se encontraron ubicaciones' : 'No matching locations found'}</div>`;
+            searchResults.innerHTML = `<div class="list-group-item disabled small text-muted">${I18n.get('statusNoLocationFound')}</div>`;
             searchResults.classList.remove('d-none');
             return;
         }
@@ -220,6 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Render all components (badge, KPIs, analytics cards, charts).
      */
     function renderAll(data) {
+        I18n.applyTranslations();
         updateLocationBadge(data.location.name);
         renderKPIs(data.current);
         if (data.analytics) {
@@ -230,18 +266,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Render the 8 advanced atmospheric analytics cards.
+     * Render the 8 advanced atmospheric analytics cards with I18n translation.
      */
     function renderAnalytics(analytics) {
         const minLabel = I18n.currentLang === 'es' ? 'Mín' : 'Min';
         const maxLabel = I18n.currentLang === 'es' ? 'Máx' : 'Max';
 
-        document.getElementById('analytics-comfort').textContent = analytics.thermalComfort || '--';
+        document.getElementById('analytics-comfort').textContent = I18n.translateValue(analytics.thermalComfort);
         document.getElementById('analytics-range').textContent = `${minLabel}: ${analytics.minTemperature.toFixed(1)} °C | ${maxLabel}: ${analytics.maxTemperature.toFixed(1)} °C`;
-        document.getElementById('analytics-rain').textContent = analytics.rainRisk || '--';
-        document.getElementById('analytics-wind').textContent = analytics.windStatus || '--';
+        document.getElementById('analytics-rain').textContent = I18n.translateValue(analytics.rainRisk);
+        document.getElementById('analytics-wind').textContent = I18n.translateValue(analytics.windStatus);
         document.getElementById('analytics-dew').textContent = `${analytics.dewPoint.toFixed(1)} °C`;
-        document.getElementById('analytics-baro').textContent = analytics.baroStatus || '--';
+        document.getElementById('analytics-baro').textContent = I18n.translateValue(analytics.baroStatus);
         document.getElementById('analytics-uv').textContent = `${analytics.uvIndex} / 11`;
         document.getElementById('analytics-density').textContent = `${analytics.airDensity.toFixed(3)} kg/m³`;
     }

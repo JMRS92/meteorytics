@@ -49,7 +49,18 @@ const I18n = {
             statusGettingGps: "Getting real-time GPS location...",
             statusGeoDenied: "Location permission denied. Please search a city manually.",
             statusLoadingWeather: "Loading atmospheric analytics in real-time...",
-            statusWeatherError: "Error loading weather data:"
+            statusWeatherError: "Error loading weather data:",
+            statusNoLocationFound: "No locations found matching your query.",
+            
+            // Analytics translations
+            "Optimal (Comfortable)": "Optimal (Comfortable)",
+            "Warm / Humid": "Warm / Humid",
+            "Cool / Cold": "Cool / Cold",
+            "High Pressure (Stable)": "High Pressure (Stable)",
+            "Low Pressure (Unstable)": "Low Pressure (Unstable)",
+            "Strong Wind": "Strong Wind",
+            "Moderate Breeze": "Moderate Breeze",
+            "Calm": "Calm"
         },
         es: {
             appTitle: "Meteorytics",
@@ -95,7 +106,18 @@ const I18n = {
             statusGettingGps: "Obteniendo ubicación GPS en tiempo real...",
             statusGeoDenied: "Acceso a ubicación denegado. Ingresa una ciudad manualmente.",
             statusLoadingWeather: "Cargando analíticas meteorológicas en tiempo real...",
-            statusWeatherError: "Error al cargar datos meteorológicos:"
+            statusWeatherError: "Error al cargar datos meteorológicos:",
+            statusNoLocationFound: "No se encontraron ubicaciones coincidentes.",
+
+            // Analytics translations
+            "Optimal (Comfortable)": "Óptimo (Confortable)",
+            "Warm / Humid": "Cálido / Húmedo",
+            "Cool / Cold": "Fresco / Frío",
+            "High Pressure (Stable)": "Alta Presión (Estable)",
+            "Low Pressure (Unstable)": "Baja Presión (Inestable)",
+            "Strong Wind": "Viento Fuerte",
+            "Moderate Breeze": "Brisa Moderada",
+            "Calm": "Calma"
         }
     },
 
@@ -111,6 +133,20 @@ const I18n = {
         return (this.translations[this.currentLang] && this.translations[this.currentLang][key])
             || (this.translations['en'][key])
             || key;
+    },
+
+    translateValue(val) {
+        if (!val) return '--';
+        if (this.translations[this.currentLang] && this.translations[this.currentLang][val]) {
+            return this.translations[this.currentLang][val];
+        }
+        if (this.currentLang === 'es') {
+            return val
+                .replace(/^High \((.*)\)$/, 'Alto ($1)')
+                .replace(/^Moderate \((.*)\)$/, 'Moderado ($1)')
+                .replace(/^Low \((.*)\)$/, 'Bajo ($1)');
+        }
+        return val;
     },
 
     applyTranslations() {
