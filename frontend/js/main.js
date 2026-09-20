@@ -1,8 +1,8 @@
 /**
- * Controlador principal de Meteorytics 100% Dinámico sin datos ni listas hardcoded.
+ * Main Controller for Meteorytics — 100% Dynamic, Accessible, Internationalized (EN | ES).
  */
 document.addEventListener('DOMContentLoaded', () => {
-    // Referencias a elementos DOM
+    // DOM Element References
     const geoBanner = document.getElementById('geo-banner');
     const btnUseLocation = document.getElementById('btn-use-location');
     const btnDismissLocation = document.getElementById('btn-dismiss-location');
@@ -14,32 +14,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const locationBadge = document.getElementById('location-badge');
     const statusMessage = document.getElementById('status-message');
     const lastUpdate = document.getElementById('last-update');
+    const btnLangEn = document.getElementById('lang-en');
+    const btnLangEs = document.getElementById('lang-es');
 
-    // Instancias de Chart.js
+    // Chart.js instances
     let tempChartInstance = null;
     let humidityChartInstance = null;
     let windChartInstance = null;
 
     let currentLat = 40.4168;
     let currentLon = -3.7038;
-    let currentName = 'Madrid, España';
+    let currentName = 'Madrid, Spain';
+    let lastWeatherData = null;
 
     init();
 
     function init() {
+        // Initialize language (English default as requested, or load saved preference)
+        const savedLang = localStorage.getItem('meteorytics_lang') || 'en';
+        I18n.setLanguage(savedLang);
+
         setupEventListeners();
-        
-        // Comprobar preferencia previa de ubicación guardada
+
+        // Check user geolocation preference
         const savedGeoPref = localStorage.getItem('meteorytics_use_geo');
         if (savedGeoPref === 'true') {
             requestUserLocation();
         } else {
-            // Cargar ubicación por defecto en vivo
             fetchAndRenderWeather(currentLat, currentLon, currentName);
         }
     }
 
     function setupEventListeners() {
+        // Language Switcher Buttons
+        if (btnLangEn) {
+            btnLangEn.addEventListener('click', () => {
+                I18n.setLanguage('en');
+                if (lastWeatherData) renderAll(lastWeatherData);
+            });
+        }
+        if (btnLangEs) {
+            btnLangEs.addEventListener('click', () => {
+                I18n.setLanguage('es');
+                if (lastWeatherData) renderAll(lastWeatherData);
+            });
+        }
+
         btnUseLocation.addEventListener('click', () => {
             localStorage.setItem('meteorytics_use_geo', 'true');
             requestUserLocation();
@@ -56,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
             requestUserLocation();
         });
 
-        // Búsqueda interactiva dinámica tipo Google Places mientras el usuario escribe
+        // Interactive autocomplete search while typing
         searchInput.addEventListener('input', () => {
             handleSearchDebounced();
         });
@@ -76,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Ocultar desplegable de sugerencias al hacer clic fuera
+        // Hide autocomplete dropdown on outside click
         document.addEventListener('click', (e) => {
             if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
                 searchResults.classList.add('d-none');
@@ -85,42 +105,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Solicita acceso a la geolocalización en tiempo real del usuario.
+     * Request real-time GPS location authorization from browser.
      */
     function requestUserLocation() {
         if (!navigator.geolocation) {
-            showStatus('La geolocalización no está soportada en tu navegador.', 'danger');
+            showStatus(I18n.get('statusGeoUnsupported'), 'danger');
             fetchAndRenderWeather(currentLat, currentLon, currentName);
             return;
         }
 
-        showStatus('Obteniendo tu ubicación GPS en tiempo real...', 'info');
+        showStatus(I18n.get('statusGettingGps'), 'info');
 
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 currentLat = position.coords.latitude;
                 currentLon = position.coords.longitude;
-                currentName = `Ubicación Real (${currentLat.toFixed(2)}°, ${currentLon.toFixed(2)}°)`;
-                
+                currentName = `GPS (${currentLat.toFixed(2)}°, ${currentLon.toFixed(2)}°)`;
+
                 geoBanner.classList.add('d-none');
                 hideStatus();
-                updateLocationBadge(`📍 ${currentName}`);
                 fetchAndRenderWeather(currentLat, currentLon, currentName);
             },
             (error) => {
-                let errorText = 'No se pudo acceder a tu ubicación.';
-                switch (error.code) {
-                    case error.PERMISSION_DENIED:
-                        errorText = 'Acceso a ubicación denegado por el usuario.';
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        errorText = 'Ubicación no disponible.';
-                        break;
-                    case error.TIMEOUT:
-                        errorText = 'Tiempo de espera agotado al obtener GPS.';
-                        break;
-                }
-                showStatus(`${errorText} Ingresa una ciudad manualmente en la barra de búsqueda.`, 'warning');
+                showStatus(I18n.get('statusGeoDenied'), 'warning');
                 fetchAndRenderWeather(currentLat, currentLon, currentName);
             },
             { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
@@ -128,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Búsqueda con debounce para autosugerencias fluidas sin recarga.
+     * Debounced search handler for fluid autocomplete suggestions.
      */
     let searchTimeout = null;
     function handleSearchDebounced() {
@@ -152,12 +159,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Renderiza el menú flotante de autosugerencias tipo Google Places.
+     * Render dynamic autocomplete menu suggestions.
      */
     function renderSearchResults(locations) {
         searchResults.innerHTML = '';
         if (!locations || locations.length === 0) {
-            searchResults.innerHTML = '<div class="list-group-item disabled small text-muted">No se encontraron ubicaciones coincidentes.</div>';
+            searchResults.innerHTML = `<div class="list-group-item disabled small text-muted">${I18n.currentLang === 'es' ? 'No se encontraron ubicaciones' : 'No matching locations found'}</div>`;
             searchResults.classList.remove('d-none');
             return;
         }
@@ -168,23 +175,22 @@ document.addEventListener('DOMContentLoaded', () => {
             item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2 px-3';
             item.innerHTML = `
                 <div>
-                    <i class="bi bi-geo-alt-fill text-primary me-2"></i>
+                    <i class="bi bi-geo-alt-fill text-primary me-2" aria-hidden="true"></i>
                     <strong>${loc.name}</strong>
                 </div>
                 <small class="text-muted ms-2">${loc.latitude.toFixed(2)}°, ${loc.longitude.toFixed(2)}°</small>
             `;
-            
+
             item.addEventListener('click', () => {
                 currentLat = loc.latitude;
                 currentLon = loc.longitude;
                 currentName = loc.name;
-                
+
                 localStorage.setItem('meteorytics_use_geo', 'false');
                 geoBanner.classList.add('d-none');
                 searchResults.classList.add('d-none');
                 searchInput.value = loc.name;
 
-                updateLocationBadge(`🔍 ${loc.name}`);
                 fetchAndRenderWeather(currentLat, currentLon, currentName);
             });
 
@@ -195,49 +201,64 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Consulta la API backend de Meteorytics y renderiza KPIs, analíticas y gráficos.
+     * Query Meteorytics Backend API and render UI components.
      */
     async function fetchAndRenderWeather(lat, lon, name) {
         try {
-            showStatus('Cargando analíticas meteorológicas en tiempo real...', 'info');
+            showStatus(I18n.get('statusLoadingWeather'), 'info');
             const data = await MeteoryticsAPI.getWeather(lat, lon, name);
             hideStatus();
-            
-            updateLocationBadge(`📍 ${data.location.name}`);
-            renderKPIs(data.current);
-            if (data.analytics) {
-                renderAnalytics(data.analytics);
-            }
-            renderCharts(data.hourly);
-            lastUpdate.textContent = `Última actualización: ${new Date().toLocaleTimeString()}`;
+
+            lastWeatherData = data;
+            renderAll(data);
         } catch (err) {
-            showStatus(`Error al cargar datos meteorológicos: ${err.message}`, 'danger');
+            showStatus(`${I18n.get('statusWeatherError')} ${err.message}`, 'danger');
         }
     }
 
     /**
-     * Renderiza las tarjetas de analítica inteligente.
+     * Render all components (badge, KPIs, analytics cards, charts).
      */
-    function renderAnalytics(analytics) {
-        document.getElementById('analytics-comfort').textContent = analytics.thermalComfort || '--';
-        document.getElementById('analytics-range').textContent = `Mín: ${analytics.minTemperature.toFixed(1)} °C | Máx: ${analytics.maxTemperature.toFixed(1)} °C`;
-        document.getElementById('analytics-rain').textContent = analytics.rainRisk || '--';
-        document.getElementById('analytics-wind').textContent = analytics.windStatus || '--';
+    function renderAll(data) {
+        updateLocationBadge(data.location.name);
+        renderKPIs(data.current);
+        if (data.analytics) {
+            renderAnalytics(data.analytics);
+        }
+        renderCharts(data.hourly);
+        lastUpdate.textContent = `${I18n.get('lastUpdatePrefix')} ${new Date().toLocaleTimeString()}`;
     }
 
     /**
-     * Renderiza los KPIs climáticos actuales.
+     * Render the 8 advanced atmospheric analytics cards.
+     */
+    function renderAnalytics(analytics) {
+        const minLabel = I18n.currentLang === 'es' ? 'Mín' : 'Min';
+        const maxLabel = I18n.currentLang === 'es' ? 'Máx' : 'Max';
+
+        document.getElementById('analytics-comfort').textContent = analytics.thermalComfort || '--';
+        document.getElementById('analytics-range').textContent = `${minLabel}: ${analytics.minTemperature.toFixed(1)} °C | ${maxLabel}: ${analytics.maxTemperature.toFixed(1)} °C`;
+        document.getElementById('analytics-rain').textContent = analytics.rainRisk || '--';
+        document.getElementById('analytics-wind').textContent = analytics.windStatus || '--';
+        document.getElementById('analytics-dew').textContent = `${analytics.dewPoint.toFixed(1)} °C`;
+        document.getElementById('analytics-baro').textContent = analytics.baroStatus || '--';
+        document.getElementById('analytics-uv').textContent = `${analytics.uvIndex} / 11`;
+        document.getElementById('analytics-density').textContent = `${analytics.airDensity.toFixed(3)} kg/m³`;
+    }
+
+    /**
+     * Render real-time current KPI cards.
      */
     function renderKPIs(current) {
         document.getElementById('kpi-temp').textContent = `${current.temperature.toFixed(1)} °C`;
-        document.getElementById('kpi-apparent').innerHTML = `<i class="bi bi-thermometer-half"></i> Sensación: ${current.apparentTemperature.toFixed(1)} °C`;
+        document.getElementById('kpi-apparent').innerHTML = `<i class="bi bi-thermometer-half" aria-hidden="true"></i> ${I18n.get('tempApparentPrefix')} ${current.apparentTemperature.toFixed(1)} °C`;
         document.getElementById('kpi-humidity').textContent = `${current.humidity} %`;
         document.getElementById('kpi-pressure').textContent = `${current.pressure.toFixed(1)} hPa`;
         document.getElementById('kpi-wind').textContent = `${current.windSpeed.toFixed(1)} km/h`;
     }
 
     /**
-     * Renderiza 3 gráficos interactivos con Chart.js a partir de los arrays reales de 24h.
+     * Render 3 Chart.js interactive charts using real 24h hourly arrays.
      */
     function renderCharts(hourlyList) {
         const labels = hourlyList.map(h => h.time);
@@ -246,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const precipProbs = hourlyList.map(h => h.precipitationProbability);
         const winds = hourlyList.map(h => h.windSpeed);
 
-        // Gráfico 1: Temperatura
+        // Chart 1: Temperature & Apparent Temperature
         const ctxTemp = document.getElementById('tempChart').getContext('2d');
         if (tempChartInstance) tempChartInstance.destroy();
         tempChartInstance = new Chart(ctxTemp, {
@@ -254,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Temperatura Real (°C)',
+                    label: I18n.get('chartTempSeries'),
                     data: temps,
                     borderColor: '#0d6efd',
                     backgroundColor: 'rgba(13, 110, 253, 0.1)',
@@ -268,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Gráfico 2: Humedad y Probabilidad de Lluvia
+        // Chart 2: Humidity & Rain Probability
         const ctxHumidity = document.getElementById('humidityChart').getContext('2d');
         if (humidityChartInstance) humidityChartInstance.destroy();
         humidityChartInstance = new Chart(ctxHumidity, {
@@ -277,12 +298,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Humedad (%)',
+                        label: I18n.get('chartHumiditySeries'),
                         data: humidities,
                         backgroundColor: 'rgba(13, 202, 240, 0.6)'
                     },
                     {
-                        label: 'Prob. Lluvia (%)',
+                        label: I18n.get('chartRainSeries'),
                         data: precipProbs,
                         backgroundColor: 'rgba(255, 193, 7, 0.7)'
                     }
@@ -294,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Gráfico 3: Análisis de Viento
+        // Chart 3: Wind Velocity Trend Analysis
         const ctxWind = document.getElementById('windChart').getContext('2d');
         if (windChartInstance) windChartInstance.destroy();
         windChartInstance = new Chart(ctxWind, {
@@ -302,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Velocidad del Viento (km/h)',
+                    label: I18n.get('chartWindSeries'),
                     data: winds,
                     borderColor: '#198754',
                     backgroundColor: 'rgba(25, 135, 84, 0.15)',
@@ -318,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateLocationBadge(text) {
-        locationBadge.innerHTML = `<i class="bi bi-geo-fill me-1"></i> ${text}`;
+        locationBadge.innerHTML = `<i class="bi bi-geo-fill me-1" aria-hidden="true"></i> ${I18n.get('locBadgePrefix')} ${text}`;
     }
 
     function showStatus(message, type = 'info') {

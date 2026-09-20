@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,130 +8,164 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
+    <!-- Custom CSS with WCAG 2.1 AA High Contrast -->
     <link rel="stylesheet" href="css/style.css">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-light d-flex flex-column min-vh-100">
 
-    <!-- Navbar / Header -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
-                <i class="bi bi-cloud-sun-fill fs-3"></i>
-                <div>
-                    <span class="fw-bold fs-4 d-block lh-1">Meteorytics</span>
-                    <small class="text-white-50 fs-7">Atmospheric Data Intelligence</small>
+    <!-- Header / Navbar with Language Switcher and Accessibility Landmark -->
+    <header role="banner">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm" role="navigation" aria-label="Main Navigation">
+            <div class="container d-flex justify-content-between align-items-center">
+                <a class="navbar-brand d-flex align-items-center gap-2" href="#" aria-label="Meteorytics Home">
+                    <i class="bi bi-cloud-sun-fill fs-3" aria-hidden="true"></i>
+                    <div>
+                        <span class="fw-bold fs-4 d-block lh-1" data-i18n="appTitle">Meteorytics</span>
+                        <small class="text-white-50 fs-7" data-i18n="appTagline">Atmospheric Data Intelligence</small>
+                    </div>
+                </a>
+
+                <!-- Language Switcher EN | ES (WCAG Accessible Toggle) -->
+                <div class="btn-group btn-group-sm" role="group" aria-label="Language selection">
+                    <button id="lang-en" type="button" class="btn btn-light active fw-bold px-3" aria-label="Switch language to English">EN</button>
+                    <button id="lang-es" type="button" class="btn btn-outline-light fw-bold px-3" aria-label="Cambiar idioma a Español">ES</button>
                 </div>
-            </a>
-        </div>
-    </nav>
+            </div>
+        </nav>
+    </header>
 
-    <!-- Main Container -->
-    <main class="container my-4 flex-grow-1">
+    <!-- Main Content Area -->
+    <main class="container my-4 flex-grow-1" role="main" id="main-content">
 
-        <!-- Banner / Modal de Solicitud de Geolocalización Real -->
-        <div id="geo-banner" class="alert alert-primary alert-dismissible fade show shadow-sm border-0 d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4" role="alert">
+        <!-- Geolocation Permission Modal Banner (WCAG Accessible Alert) -->
+        <section id="geo-banner" class="alert alert-primary alert-dismissible fade show shadow-sm border-0 d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4" role="region" aria-label="Location Permission Request">
             <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-geo-alt-fill fs-3 text-primary"></i>
+                <i class="bi bi-geo-alt-fill fs-3 text-primary" aria-hidden="true"></i>
                 <div>
-                    <strong class="fs-6">¿Permitir acceso a tu ubicación real en tiempo real?</strong>
-                    <span class="d-block text-secondary small">Meteorytics requiere autorización para obtener la posición GPS exacta de tu dispositivo y cargar analíticas meteorológicas precisas.</span>
+                    <h2 class="fs-6 mb-0 fw-bold" data-i18n="geoTitle">Allow real-time location access?</h2>
+                    <span class="d-block text-secondary small" data-i18n="geoDesc">Meteorytics requests authorization to get your device's exact GPS coordinates and load precise atmospheric data analytics.</span>
                 </div>
             </div>
             <div class="d-flex gap-2">
-                <button id="btn-use-location" class="btn btn-primary btn-sm d-flex align-items-center gap-1 shadow-sm">
-                    <i class="bi bi-crosshair"></i> Permitir mi ubicación GPS
+                <button id="btn-use-location" class="btn btn-primary btn-sm d-flex align-items-center gap-1 shadow-sm" data-i18n="geoAllowBtn">
+                    <i class="bi bi-crosshair" aria-hidden="true"></i> Allow GPS Location
                 </button>
-                <button id="btn-dismiss-location" class="btn btn-outline-secondary btn-sm">
-                    Buscar ubicación manualmente
+                <button id="btn-dismiss-location" class="btn btn-outline-secondary btn-sm" data-i18n="geoManualBtn">
+                    Search manually
                 </button>
             </div>
-        </div>
+        </section>
 
-        <!-- Buscador Dinámico de Ubicación por Geocodificación (100% Real API) -->
-        <div class="card shadow-sm border-0 mb-4">
+        <!-- Dynamic Location Search Bar (WCAG Accessible Search Form) -->
+        <section class="card shadow-sm border-0 mb-4" role="search" aria-label="Location Search">
             <div class="card-body">
                 <div class="row g-3 align-items-center">
                     <div class="col-12 col-lg-9 position-relative">
-                        <label for="search-input" class="form-label fw-semibold small text-muted mb-1">
-                            <i class="bi bi-search text-primary me-1"></i> Buscar cualquier ciudad, país o dirección:
+                        <label for="search-input" class="form-label fw-semibold small text-dark mb-1" data-i18n="searchLabel">
+                            <i class="bi bi-search text-primary me-1" aria-hidden="true"></i> Search any city, country, or address:
                         </label>
                         <div class="input-group input-group-lg">
-                            <input id="search-input" type="text" class="form-control fs-6" placeholder="Escribe 'Madrid', 'Barcelona', 'Lima', 'Tokio', 'Pamplona'..." autocomplete="off">
-                            <button id="btn-search" class="btn btn-primary px-4 d-flex align-items-center gap-2 fs-6" type="button">
-                                <i class="bi bi-search"></i> Buscar
+                            <input id="search-input" type="text" class="form-control fs-6 border-secondary" placeholder="Type 'Madrid', 'London', 'Lima', 'Tokyo'..." data-i18n-placeholder="searchPlaceholder" autocomplete="off" aria-autocomplete="list" aria-controls="search-results" aria-expanded="false">
+                            <button id="btn-search" class="btn btn-primary px-4 d-flex align-items-center gap-2 fs-6" type="button" data-i18n="searchBtn">
+                                <i class="bi bi-search" aria-hidden="true"></i> Search
                             </button>
                         </div>
-                        <!-- Lista desplegable flotante de autosugerencias tipo Google -->
-                        <div id="search-results" class="list-group position-absolute w-100 shadow-lg mt-1 d-none" style="z-index: 1050; max-height: 280px; overflow-y: auto; top: 100%;"></div>
+                        <!-- Floating Autocomplete Suggestion List (WCAG Accessible Dropdown Listbox) -->
+                        <div id="search-results" class="list-group position-absolute w-100 shadow-lg mt-1 d-none" role="listbox" style="z-index: 1050; max-height: 280px; overflow-y: auto; top: 100%;"></div>
                     </div>
 
                     <div class="col-12 col-lg-3 d-flex align-items-end justify-content-lg-end pt-2 pt-lg-0">
-                        <button id="btn-request-gps" class="btn btn-outline-primary btn-lg w-100 d-flex align-items-center justify-content-center gap-2 fs-6">
-                            <i class="bi bi-crosshair"></i> Mi Ubicación GPS
+                        <button id="btn-request-gps" class="btn btn-outline-primary btn-lg w-100 d-flex align-items-center justify-content-center gap-2 fs-6" data-i18n="myGpsBtn">
+                            <i class="bi bi-crosshair" aria-hidden="true"></i> My GPS Location
                         </button>
                     </div>
                 </div>
 
                 <div class="mt-3 pt-2 border-top d-flex flex-wrap align-items-center justify-content-between gap-2">
-                    <span id="location-badge" class="badge bg-secondary fs-6 py-2 px-3 rounded-pill">
-                        <i class="bi bi-geo-fill me-1"></i> Ubicación: Cargando...
+                    <span id="location-badge" class="badge bg-secondary fs-6 py-2 px-3 rounded-pill text-white" role="status">
+                        <i class="bi bi-geo-fill me-1" aria-hidden="true"></i> Location: Loading...
                     </span>
-                    <small id="last-update" class="text-muted fw-semibold"></small>
+                    <small id="last-update" class="text-secondary fw-semibold" aria-live="polite"></small>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Alertas y Estado -->
-        <div id="status-message" class="alert d-none mb-4" role="alert"></div>
+        <!-- Status & Error Alert Region (WCAG Live Region) -->
+        <div id="status-message" class="alert d-none mb-4" role="status" aria-live="assertive"></div>
 
-        <!-- Módulo de Analíticas Atmosféricas (Atmospheric Intelligence Analytics) -->
-        <div class="card shadow-sm border-0 mb-4 bg-white">
+        <!-- Expanded Atmospheric Intelligence & Data Analytics Section -->
+        <section class="card shadow-sm border-0 mb-4 bg-white" role="region" aria-label="Atmospheric Analytics Dashboard">
             <div class="card-header bg-white border-0 pt-3 pb-0">
-                <h5 class="fw-bold text-primary mb-0">
-                    <i class="bi bi-cpu-fill me-2"></i> Módulo de Analítica Atmosférica Inteligente
-                </h5>
+                <h2 class="h5 fw-bold text-primary mb-0" data-i18n="analyticsHeader">
+                    <i class="bi bi-cpu-fill me-2" aria-hidden="true"></i> Atmospheric Intelligence & Advanced Analytics Module
+                </h2>
             </div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-12 col-md-3">
-                        <div class="p-3 bg-light rounded-3 border">
-                            <div class="text-muted small text-uppercase fw-bold mb-1"><i class="bi bi-emoji-smile text-success me-1"></i> Confort Térmico</div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border h-100">
+                            <div class="text-secondary small text-uppercase fw-bold mb-1" data-i18n="comfortTitle"><i class="bi bi-emoji-smile text-success me-1" aria-hidden="true"></i> Thermal Comfort</div>
                             <div id="analytics-comfort" class="fw-bold text-dark fs-6">--</div>
                         </div>
                     </div>
-                    <div class="col-12 col-md-3">
-                        <div class="p-3 bg-light rounded-3 border">
-                            <div class="text-muted small text-uppercase fw-bold mb-1"><i class="bi bi-thermometer-high text-danger me-1"></i> Rango Térmico 24h</div>
-                            <div id="analytics-range" class="fw-bold text-dark fs-6">Mín: -- °C | Máx: -- °C</div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border h-100">
+                            <div class="text-secondary small text-uppercase fw-bold mb-1" data-i18n="rangeTitle"><i class="bi bi-thermometer-high text-danger me-1" aria-hidden="true"></i> 24h Thermal Range</div>
+                            <div id="analytics-range" class="fw-bold text-dark fs-6">Min: -- °C | Max: -- °C</div>
                         </div>
                     </div>
-                    <div class="col-12 col-md-3">
-                        <div class="p-3 bg-light rounded-3 border">
-                            <div class="text-muted small text-uppercase fw-bold mb-1"><i class="bi bi-cloud-rain-fill text-primary me-1"></i> Riesgo Lluvia 24h</div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border h-100">
+                            <div class="text-secondary small text-uppercase fw-bold mb-1" data-i18n="rainTitle"><i class="bi bi-cloud-rain-fill text-primary me-1" aria-hidden="true"></i> 24h Rain Risk</div>
                             <div id="analytics-rain" class="fw-bold text-dark fs-6">--</div>
                         </div>
                     </div>
-                    <div class="col-12 col-md-3">
-                        <div class="p-3 bg-light rounded-3 border">
-                            <div class="text-muted small text-uppercase fw-bold mb-1"><i class="bi bi-wind text-info me-1"></i> Estado del Viento</div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border h-100">
+                            <div class="text-secondary small text-uppercase fw-bold mb-1" data-i18n="windTitle"><i class="bi bi-wind text-info me-1" aria-hidden="true"></i> Wind Condition</div>
                             <div id="analytics-wind" class="fw-bold text-dark fs-6">--</div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Analytics Cards -->
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border h-100">
+                            <div class="text-secondary small text-uppercase fw-bold mb-1" data-i18n="dewTitle"><i class="bi bi-droplet-half text-info me-1" aria-hidden="true"></i> Dew Point</div>
+                            <div id="analytics-dew" class="fw-bold text-dark fs-6">-- °C</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border h-100">
+                            <div class="text-secondary small text-uppercase fw-bold mb-1" data-i18n="baroTitle"><i class="bi bi-speedometer text-warning me-1" aria-hidden="true"></i> Barometric State</div>
+                            <div id="analytics-baro" class="fw-bold text-dark fs-6">--</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border h-100">
+                            <div class="text-secondary small text-uppercase fw-bold mb-1" data-i18n="uvTitle"><i class="bi bi-sun-fill text-warning me-1" aria-hidden="true"></i> UV Index Estimate</div>
+                            <div id="analytics-uv" class="fw-bold text-dark fs-6">--</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border h-100">
+                            <div class="text-secondary small text-uppercase fw-bold mb-1" data-i18n="densityTitle"><i class="bi bi-box-seam text-secondary me-1" aria-hidden="true"></i> Air Density</div>
+                            <div id="analytics-density" class="fw-bold text-dark fs-6">-- kg/m³</div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- KPIs Meteorológicos Actuales -->
-        <div class="row g-3 mb-4">
+        <!-- Live Current Meteorological KPIs -->
+        <section class="row g-3 mb-4" role="region" aria-label="Current Weather Metrics">
             <div class="col-6 col-md-3">
                 <div class="card shadow-sm border-0 h-100 border-start border-primary border-4">
                     <div class="card-body">
-                        <div class="text-muted small text-uppercase fw-bold">Temperatura</div>
+                        <div class="text-secondary small text-uppercase fw-bold" data-i18n="tempKpiTitle">Temperature</div>
                         <div id="kpi-temp" class="fs-2 fw-bold text-dark my-1">-- °C</div>
-                        <div id="kpi-apparent" class="text-muted small"><i class="bi bi-thermometer-half"></i> Sensación: -- °C</div>
+                        <div id="kpi-apparent" class="text-secondary small"><i class="bi bi-thermometer-half" aria-hidden="true"></i> Feels like: -- °C</div>
                     </div>
                 </div>
             </div>
@@ -139,9 +173,9 @@
             <div class="col-6 col-md-3">
                 <div class="card shadow-sm border-0 h-100 border-start border-info border-4">
                     <div class="card-body">
-                        <div class="text-muted small text-uppercase fw-bold">Humedad</div>
+                        <div class="text-secondary small text-uppercase fw-bold" data-i18n="humidityKpiTitle">Humidity</div>
                         <div id="kpi-humidity" class="fs-2 fw-bold text-dark my-1">-- %</div>
-                        <div class="text-muted small"><i class="bi bi-droplet-fill"></i> Humedad relativa</div>
+                        <div class="text-secondary small" data-i18n="humidityKpiSub"><i class="bi bi-droplet-fill" aria-hidden="true"></i> Relative humidity</div>
                     </div>
                 </div>
             </div>
@@ -149,9 +183,9 @@
             <div class="col-6 col-md-3">
                 <div class="card shadow-sm border-0 h-100 border-start border-warning border-4">
                     <div class="card-body">
-                        <div class="text-muted small text-uppercase fw-bold">Presión</div>
+                        <div class="text-secondary small text-uppercase fw-bold" data-i18n="pressureKpiTitle">Pressure</div>
                         <div id="kpi-pressure" class="fs-2 fw-bold text-dark my-1">-- hPa</div>
-                        <div class="text-muted small"><i class="bi bi-speedometer2"></i> Presión superficie</div>
+                        <div class="text-secondary small" data-i18n="pressureKpiSub"><i class="bi bi-speedometer2" aria-hidden="true"></i> Surface pressure</div>
                     </div>
                 </div>
             </div>
@@ -159,61 +193,65 @@
             <div class="col-6 col-md-3">
                 <div class="card shadow-sm border-0 h-100 border-start border-success border-4">
                     <div class="card-body">
-                        <div class="text-muted small text-uppercase fw-bold">Viento</div>
+                        <div class="text-secondary small text-uppercase fw-bold" data-i18n="windKpiTitle">Wind Speed</div>
                         <div id="kpi-wind" class="fs-2 fw-bold text-dark my-1">-- km/h</div>
-                        <div class="text-muted small"><i class="bi bi-wind"></i> Velocidad viento</div>
+                        <div class="text-secondary small" data-i18n="windKpiSub"><i class="bi bi-wind" aria-hidden="true"></i> Wind velocity</div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- 3 Gráficos Interactivos con Datos Reales -->
-        <div class="row g-4">
+        <!-- 3 Interactive Visualization Charts (WCAG Accessible Canvas with Text Summaries) -->
+        <section class="row g-4" role="region" aria-label="Weather Trend Charts">
             <div class="col-12 col-lg-6">
                 <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white border-0 pt-3 fw-bold text-dark">
-                        <i class="bi bi-graph-up-arrow text-primary me-2"></i> Evolución de Temperatura (24h Real API)
+                    <div class="card-header bg-white border-0 pt-3 fw-bold text-dark d-flex align-items-center gap-2">
+                        <i class="bi bi-graph-up-arrow text-primary" aria-hidden="true"></i>
+                        <span data-i18n="chartTempTitle">24h Temperature vs Apparent Temperature Evolution</span>
                     </div>
                     <div class="card-body">
-                        <canvas id="tempChart"></canvas>
+                        <canvas id="tempChart" aria-label="Temperature chart" role="img"></canvas>
                     </div>
                 </div>
             </div>
 
             <div class="col-12 col-lg-6">
                 <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white border-0 pt-3 fw-bold text-dark">
-                        <i class="bi bi-bar-chart-line-fill text-info me-2"></i> Humedad y Probabilidad de Lluvia por Hora
+                    <div class="card-header bg-white border-0 pt-3 fw-bold text-dark d-flex align-items-center gap-2">
+                        <i class="bi bi-bar-chart-line-fill text-info" aria-hidden="true"></i>
+                        <span data-i18n="chartHumidityTitle">Hourly Humidity & Precipitation Probability</span>
                     </div>
                     <div class="card-body">
-                        <canvas id="humidityChart"></canvas>
+                        <canvas id="humidityChart" aria-label="Humidity chart" role="img"></canvas>
                     </div>
                 </div>
             </div>
 
             <div class="col-12">
                 <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white border-0 pt-3 fw-bold text-dark">
-                        <i class="bi bi-wind text-success me-2"></i> Análisis Evolutivo de Velocidad del Viento (km/h)
+                    <div class="card-header bg-white border-0 pt-3 fw-bold text-dark d-flex align-items-center gap-2">
+                        <i class="bi bi-wind text-success" aria-hidden="true"></i>
+                        <span data-i18n="chartWindTitle">Wind Velocity Trend Analysis (km/h)</span>
                     </div>
                     <div class="card-body">
-                        <canvas id="windChart"></canvas>
+                        <canvas id="windChart" aria-label="Wind speed chart" role="img"></canvas>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-top py-3 text-center text-muted small mt-auto">
+    <footer class="bg-white border-top py-3 text-center text-secondary small mt-auto" role="contentinfo">
         <div class="container">
-            &copy; 2026 <strong>Meteorytics</strong> — Atmospheric Data Intelligence
+            &copy; 2026 <strong data-i18n="appTitle">Meteorytics</strong> — <span data-i18n="appTagline">Atmospheric Data Intelligence</span>
         </div>
     </footer>
 
     <!-- Bootstrap 5.3 JS Bundle CDN -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/i18n.js"></script>
     <script src="js/api.js"></script>
     <script src="js/main.js"></script>
 </body>

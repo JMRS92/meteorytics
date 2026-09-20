@@ -86,12 +86,18 @@ public class WeatherController implements HttpHandler {
             if (h.getPrecipitationProbability() > maxRainProb) maxRainProb = h.getPrecipitationProbability();
         }
 
-        String comfort = (cur.getTemperature() >= 18 && cur.getTemperature() <= 25 && cur.getHumidity() <= 60)
-                ? "Confortable (Óptimo)"
-                : (cur.getTemperature() > 25 ? "Cálido / Bochorno" : "Fresco / Frío");
+        double dewPoint = cur.getTemperature() - ((100.0 - cur.getHumidity()) / 5.0);
+        double tempSpread = maxTemp - minTemp;
+        double airDensity = (cur.getPressure() * 100) / (287.058 * (cur.getTemperature() + 273.15));
+        int uvEstimate = Math.min(11, Math.max(1, (int)(maxTemp / 3.0)));
 
-        String rainRisk = maxRainProb > 70 ? "Alto (" + maxRainProb + "%)" : (maxRainProb > 30 ? "Moderado (" + maxRainProb + "%)" : "Bajo (" + maxRainProb + "%)");
-        String windStatus = cur.getWindSpeed() > 30 ? "Viento Fuerte" : (cur.getWindSpeed() > 15 ? "Brisa Moderada" : "Calma");
+        String comfort = (cur.getTemperature() >= 18 && cur.getTemperature() <= 25 && cur.getHumidity() <= 60)
+                ? "Optimal (Comfortable)"
+                : (cur.getTemperature() > 25 ? "Warm / Humid" : "Cool / Cold");
+
+        String rainRisk = maxRainProb > 70 ? "High (" + maxRainProb + "%)" : (maxRainProb > 30 ? "Moderate (" + maxRainProb + "%)" : "Low (" + maxRainProb + "%)");
+        String windStatus = cur.getWindSpeed() > 30 ? "Strong Wind" : (cur.getWindSpeed() > 15 ? "Moderate Breeze" : "Calm");
+        String baroStatus = cur.getPressure() >= 1013.25 ? "High Pressure (Stable)" : "Low Pressure (Unstable)";
 
         StringBuilder sb = new StringBuilder();
         sb.append("{");
@@ -104,8 +110,8 @@ public class WeatherController implements HttpHandler {
                 cur.getTemperature(), cur.getApparentTemperature(), cur.getHumidity(), cur.getPressure(), cur.getWindSpeed()));
         
         sb.append(String.format(java.util.Locale.ROOT,
-                "\"analytics\":{\"thermalComfort\":\"%s\",\"maxTemperature\":%.1f,\"minTemperature\":%.1f,\"rainRisk\":\"%s\",\"windStatus\":\"%s\"},",
-                comfort, maxTemp, minTemp, rainRisk, windStatus));
+                "\"analytics\":{\"thermalComfort\":\"%s\",\"maxTemperature\":%.1f,\"minTemperature\":%.1f,\"tempSpread\":%.1f,\"dewPoint\":%.1f,\"airDensity\":%.3f,\"uvIndex\":%d,\"baroStatus\":\"%s\",\"rainRisk\":\"%s\",\"windStatus\":\"%s\"},",
+                comfort, maxTemp, minTemp, tempSpread, dewPoint, airDensity, uvEstimate, baroStatus, rainRisk, windStatus));
 
         sb.append("\"hourly\":[");
         for (int i = 0; i < forecast.getHourly().size(); i++) {
