@@ -13,13 +13,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 
 /**
  * Clase principal y punto de entrada para la aplicación Meteorytics Backend.
  * 
- * Inicializa el servidor HTTP embebido del JDK {@link HttpServer} en el puerto 8080,
+ * Inicializa el servidor HTTP embebido del JDK {@link HttpServer} en el puerto configurado (8080 por defecto),
  * configura los servicios de negocio y registra los controladores REST y el servidor de archivos estáticos.
  * 
  * @author Meteorytics Team
@@ -28,45 +29,67 @@ import java.nio.file.Files;
 public class Main {
     
     /** Puerto por defecto en el que escucha el servidor HTTP */
-    private static final int PORT = 8080;
+    private static final int DEFAULT_PORT = 8080;
 
     /**
      * Punto de entrada principal de la aplicación.
      *
      * @param args Argumentos de la línea de comandos
-     * @throws IOException Si ocurre un error al iniciar el servidor HTTP
      */
-    public static void main(String[] args) throws IOException {
-        HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
-        
-        // Inicializar capas de arquitectura
-        AtmosphericDataSource dataSource = new ApiAtmosphericDataSource();
-        WeatherService weatherService = new WeatherService(dataSource);
-        WeatherController weatherController = new WeatherController(weatherService);
-        GeocodingController geocodingController = new GeocodingController(weatherService);
+    public static void main(String[] args) {
+        int port = getPort();
 
-        // Endpoint de salud
-        server.createContext("/api/health", exchange -> {
-            String response = "{\"status\":\"UP\",\"service\":\"Meteorytics API\"}";
-            exchange.getResponseHeaders().set("Content-Type", "application/json");
-            exchange.sendResponseHeaders(200, response.getBytes().length);
-            try (OutputStream os = exchange.getResponseBody()) {
-                os.write(response.getBytes());
-            }
-        });
+        try {
+            HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+            
+            // Inicializar capas de arquitectura
+            AtmosphericDataSource dataSource = new ApiAtmosphericDataSource();
+            WeatherService weatherService = new WeatherService(dataSource);
+            WeatherController weatherController = new WeatherController(weatherService);
+            GeocodingController geocodingController = new GeocodingController(weatherService);
 
-        // Endpoint meteorológico
-        server.createContext("/api/weather", weatherController);
+            // Endpoint de salud
+            server.createContext("/api/health", exchange -> {
+                String response = "{\"status\":\"UP\",\"service\":\"Meteorytics API\"}";
+                exchange.getResponseHeaders().set("Content-Type", "application/json");
+                exchange.sendResponseHeaders(200, response.getBytes().length);
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(response.getBytes());
+                }
+            });
 
-        // Endpoint de búsqueda de ubicaciones (geocodificación)
-        server.createContext("/api/geocoding", geocodingController);
+            // Endpoint meteorológico
+            server.createContext("/api/weather", weatherController);
 
-        // Servidor de archivos estáticos del frontend
-        server.createContext("/", new StaticFileHandler("frontend"));
+            // Endpoint de búsqueda de ubicaciones (geocodificación)
+            server.createContext("/api/geocoding", geocodingController);
 
-        server.setExecutor(null);
-        server.start();
-        System.out.println("Servidor Meteorytics ejecutándose en http://localhost:" + PORT);
+            // Servidor de archivos estáticos del frontend
+            server.createContext("/", new StaticFileHandler("frontend"));
+
+            server.setExecutor(null);
+            server.start();
+            System.out.println("Servidor Meteorytics ejecutándose exitosamente en http://localhost:" + port);
+        } catch (BindException e) {
+            System.err.printf("ERROR: El puerto %d ya está en uso por otra instancia. Cierra el proceso anterior o usa export PORT=%d.\n", port, port + 1);
+            System.exit(1);
+        } catch (IOException e) {
+            System.err.println("ERROR: No se pudo iniciar el servidor HTTP: " + e.getMessage());
+            System.exit(1);
+        }
+    }
+
+    /**
+     * Obtiene el puerto de ejecución configurado por variable de entorno o por defecto.
+     */
+    private static int getPort() {
+        String envPort = System.getenv("PORT");
+        if (envPort != null && !envPort.isEmpty()) {
+            try {
+                return Integer.parseInt(envPort);
+            } catch (NumberFormatException ignored) {}
+        }
+        return DEFAULT_PORT;
     }
 
     /**
