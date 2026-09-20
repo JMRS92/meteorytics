@@ -53,7 +53,6 @@ public class ApiAtmosphericDataSource implements AtmosphericDataSource {
         
         validateCoordinates(latitude, longitude);
 
-        // Uso de Locale.ROOT para evitar sustitución accidental de comas en parámetros
         String url = String.format(Locale.ROOT,
                 "%s?latitude=%.4f&longitude=%.4f&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,apparent_temperature",
                 BASE_URL, latitude, longitude);
@@ -61,11 +60,14 @@ public class ApiAtmosphericDataSource implements AtmosphericDataSource {
         String jsonResponse = sendHttpRequest(url);
 
         try {
-            double temp = JsonUtils.extractDouble(jsonResponse, "temperature_2m", 20.0);
-            double apparentTemp = JsonUtils.extractDouble(jsonResponse, "apparent_temperature", temp);
-            int humidity = JsonUtils.extractInt(jsonResponse, "relative_humidity_2m", 50);
-            double pressure = JsonUtils.extractDouble(jsonResponse, "surface_pressure", 1013.25);
-            double windSpeed = JsonUtils.extractDouble(jsonResponse, "wind_speed_10m", 10.0);
+            // Extraer bloque específico "current" para evitar confusión con "current_units"
+            String currentBlock = JsonUtils.extractJsonObject(jsonResponse, "current");
+
+            double temp = JsonUtils.extractDouble(currentBlock, "temperature_2m", 20.0);
+            double apparentTemp = JsonUtils.extractDouble(currentBlock, "apparent_temperature", temp);
+            int humidity = JsonUtils.extractInt(currentBlock, "relative_humidity_2m", 50);
+            double pressure = JsonUtils.extractDouble(currentBlock, "surface_pressure", 1013.25);
+            double windSpeed = JsonUtils.extractDouble(currentBlock, "wind_speed_10m", 10.0);
 
             return new CurrentWeather(temp, apparentTemp, humidity, pressure, windSpeed);
         } catch (Exception e) {
@@ -87,11 +89,14 @@ public class ApiAtmosphericDataSource implements AtmosphericDataSource {
 
         try {
             List<HourlyWeather> hourlyList = new ArrayList<>();
-            List<String> times = JsonUtils.extractStringArray(jsonResponse, "time");
-            List<Double> temps = JsonUtils.extractDoubleArray(jsonResponse, "temperature_2m");
-            List<Double> humidities = JsonUtils.extractDoubleArray(jsonResponse, "relative_humidity_2m");
-            List<Double> precipProbs = JsonUtils.extractDoubleArray(jsonResponse, "precipitation_probability");
-            List<Double> winds = JsonUtils.extractDoubleArray(jsonResponse, "wind_speed_10m");
+            // Extraer bloque específico "hourly" para evitar confusión con "hourly_units"
+            String hourlyBlock = JsonUtils.extractJsonObject(jsonResponse, "hourly");
+
+            List<String> times = JsonUtils.extractStringArray(hourlyBlock, "time");
+            List<Double> temps = JsonUtils.extractDoubleArray(hourlyBlock, "temperature_2m");
+            List<Double> humidities = JsonUtils.extractDoubleArray(hourlyBlock, "relative_humidity_2m");
+            List<Double> precipProbs = JsonUtils.extractDoubleArray(hourlyBlock, "precipitation_probability");
+            List<Double> winds = JsonUtils.extractDoubleArray(hourlyBlock, "wind_speed_10m");
 
             int count = Math.min(times.size(), Math.min(temps.size(), Math.min(humidities.size(), Math.min(precipProbs.size(), winds.size()))));
 

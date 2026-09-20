@@ -6,11 +6,47 @@ import java.util.List;
 /**
  * Utilidad liviana para extracción de valores JSON sin dependencias externas.
  * 
- * Permite obtener valores numéricos, cadenas de texto, arrays de objetos y arrays simples directamente de respuestas JSON.
+ * Permite obtener objetos, valores numéricos, cadenas de texto y arrays directamente de respuestas JSON.
  * 
  * @author Meteorytics Team
  */
 public class JsonUtils {
+
+    /**
+     * Extrae el bloque de objeto JSON (ej. "current": { ... }) dada su clave.
+     *
+     * @param json Cadena JSON completa
+     * @param key Clave del objeto a extraer
+     * @return Subcadena con el objeto JSON { ... } o el json completo si no se encuentra
+     */
+    public static String extractJsonObject(String json, String key) {
+        try {
+            String pattern = "\"" + key + "\":{";
+            int index = json.indexOf(pattern);
+            if (index == -1) {
+                // Probar variante con espacio tras dos puntos
+                pattern = "\"" + key + "\": {";
+                index = json.indexOf(pattern);
+                if (index == -1) return json;
+            }
+
+            int start = json.indexOf("{", index + key.length());
+            if (start == -1) return json;
+
+            int depth = 0;
+            for (int i = start; i < json.length(); i++) {
+                char c = json.charAt(i);
+                if (c == '{') depth++;
+                else if (c == '}') {
+                    depth--;
+                    if (depth == 0) {
+                        return json.substring(start, i + 1);
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+        return json;
+    }
 
     /**
      * Extrae un valor de punto flotante (double) dado una clave dentro de una cadena JSON.
@@ -31,11 +67,28 @@ public class JsonUtils {
                 start++;
             }
             
+            // Si el valor es una cadena de texto (ej. unidades "°C"), se omite
+            if (start < json.length() && json.charAt(start) == '"') {
+                // Buscar siguiente ocurrencia si la primera era una unidad
+                int nextIndex = json.indexOf(pattern, start);
+                if (nextIndex != -1) {
+                    start = nextIndex + pattern.length();
+                    while (start < json.length() && (json.charAt(start) == ' ' || json.charAt(start) == ':')) {
+                        start++;
+                    }
+                }
+                if (start < json.length() && json.charAt(start) == '"') {
+                    return defaultValue;
+                }
+            }
+
             int end = start;
             while (end < json.length() && (Character.isDigit(json.charAt(end)) || json.charAt(end) == '.' || json.charAt(end) == '-')) {
                 end++;
             }
             
+            if (start == end) return defaultValue;
+
             String valStr = json.substring(start, end);
             return Double.parseDouble(valStr);
         } catch (Exception e) {
@@ -92,7 +145,11 @@ public class JsonUtils {
         try {
             String pattern = "\"" + key + "\":[";
             int index = json.indexOf(pattern);
-            if (index == -1) return list;
+            if (index == -1) {
+                pattern = "\"" + key + "\": [";
+                index = json.indexOf(pattern);
+                if (index == -1) return list;
+            }
 
             int start = index + pattern.length();
             int end = json.indexOf("]", start);
@@ -121,7 +178,11 @@ public class JsonUtils {
         try {
             String pattern = "\"" + key + "\":[";
             int index = json.indexOf(pattern);
-            if (index == -1) return list;
+            if (index == -1) {
+                pattern = "\"" + key + "\": [";
+                index = json.indexOf(pattern);
+                if (index == -1) return list;
+            }
 
             int start = index + pattern.length();
             int end = json.indexOf("]", start);
@@ -151,7 +212,11 @@ public class JsonUtils {
         try {
             String pattern = "\"" + arrayKey + "\":[";
             int index = json.indexOf(pattern);
-            if (index == -1) return objects;
+            if (index == -1) {
+                pattern = "\"" + arrayKey + "\": [";
+                index = json.indexOf(pattern);
+                if (index == -1) return objects;
+            }
 
             int start = index + pattern.length();
             int depth = 0;
